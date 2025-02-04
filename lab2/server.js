@@ -1,104 +1,76 @@
 const express = require('express');
-const app = express();
+const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 
+const app = express();
 app.use(express.json());
-
-// The JSON data will be stored in the data.json file
-const dataPath = path.join(__dirname, 'data.json');
-
-// Helper function to read JSON data
-const readData = () => {
-  const rawData = fs.readFileSync(dataPath);
-  return JSON.parse(rawData);
-};
-
-// Helper function to write to the JSON data
-const writeData = (data) => {
-  fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
-};
-
-// Serving static files (like HTML, CSS, JS)
 app.use(express.static('public'));
 
-// Get a frontend HTML page
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+const dataPath = path.join(__dirname, 'data.json');
+const readData = () => JSON.parse(fs.readFileSync(dataPath));
+
+// Spotify API Credentials
+const SPOTIFY_CLIENT_ID = "abaf98e3885e4b1780ac4f249b9c603c";
+const SPOTIFY_CLIENT_SECRET = "48d819a941f746469ccaedbff1cb02ab";
+
+// Genius API Credentials
+const GENIUS_ACCESS_TOKEN = "Mx1Jtkdg34TcRW14yl8J3udQglgZ0MCz2i1-q7vUvDIVzK3raIcwWGIBaCaw1JNL";
+
+// Fetch Spotify Access Token
+const getSpotifyToken = async () => {
+    const response = await axios.post('https://accounts.spotify.com/api/token', 
+        'grant_type=client_credentials', 
+        { 
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Authorization': `Basic ${Buffer.from(`${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`).toString('base64')}`
+            }
+        }
+    );
+    return response.data.access_token;
+};
+
+// Get Kendrick Lamar's songs from Spotify and merge with local JSON
+app.get('/spotify-songs', async (req, res) => {
+    try {
+        const token = await getSpotifyToken();
+        const response = await axios.get(
+            'https://api.spotify.com/v1/search?q=kendrick+lamar&type=track&limit=10', 
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        const spotifySongs = response.data.tracks.items.map(song => ({
+            title: song.name,
+            album: song.album.name,
+            spotify_url: song.external_urls.spotify
+        }));
+
+        // Merge with local JSON data
+        const localSongs = readData();
+        res.json({ localSongs, spotifySongs });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch Spotify songs', details: error.message });
+    }
 });
 
-// Get a list of all songs
-app.get('/songs', (req, res) => {
-  const songs = readData();
-  res.json(songs.map(song => ({ id: song.id, title: song.title })));
+// Get Genius Lyrics for a Song (Similar to the Weather API Example)
+app.get('/lyrics/:song', async (req, res) => {
+    try {
+        const song = req.params.song;
+        const response = await axios.get(`https://api.genius.com/search?q=${encodeURIComponent(song)}`, {
+            headers: { Authorization: `Bearer ${GENIUS_ACCESS_TOKEN}` }
+        });
+
+        const songUrl = response.data.response.hits[0]?.result.url;
+        if (!songUrl) return res.status(404).json({ error: "Lyrics not found" });
+
+        res.json({ song, lyrics_url: songUrl });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch lyrics', details: error.message });
+    }
 });
 
-// Get a specific song by ID
-app.get('/songs/:id', (req, res) => {
-  const songId = parseInt(req.params.id, 10);
-  const songs = readData();
-  const song = songs.find(song => song.id === songId);
-  
-  if (song) {
-    res.json(song);
-  } else {
-    res.status(404).send('Song not found');
-  }
-});
-
-// Add a new song
-app.post('/songs', (req, res) => {
-  const newSong = req.body;
-  const songs = readData();
-
-  // Ensure unique IDs
-  newSong.id = songs.length ? Math.max(songs.map(song => song.id)) + 1 : 1;
-  
-  songs.push(newSong);
-  writeData(songs);
-  res.status(201).json(newSong);
-});
-
-// Update a specific song by ID
-app.put('/songs/:id', (req, res) => {
-  const songId = parseInt(req.params.id, 10);
-  const songs = readData();
-  const songIndex = songs.findIndex(song => song.id === songId);
-
-  if (songIndex !== -1) {
-    const updatedSong = { ...songs[songIndex], ...req.body };
-    songs[songIndex] = updatedSong;
-    writeData(songs);
-    res.json(updatedSong);
-  } else {
-    res.status(404).send('Song not found');
-  }
-});
-
-// Bulk update songs
-app.put('/songs', (req, res) => {
-  const songs = req.body;
-  writeData(songs);
-  res.status(200).json(songs);
-});
-
-// Delete a song by ID
-app.delete('/songs/:id', (req, res) => {
-  const songId = parseInt(req.params.id, 10);
-  const songs = readData();
-  const songIndex = songs.findIndex(song => song.id === songId);
-
-  if (songIndex !== -1) {
-    songs.splice(songIndex, 1);
-    writeData(songs);
-    res.status(200).send('Song deleted');
-  } else {
-    res.status(404).send('Song not found');
-  }
-});
-
-// Start the server
+// Start the Server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
