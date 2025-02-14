@@ -37,7 +37,7 @@ app.get('/songs', (req, res) => {
 });
 
 // Get a specific song by ID
-app.get('/songs:id', (req, res) => {
+app.get('/songs/:id', (req, res) => {
   const songId = parseInt(req.params.id, 10);
   const songs = readData();
   const song = songs.find(song => song.id === songId);
