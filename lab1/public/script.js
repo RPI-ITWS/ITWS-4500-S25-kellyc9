@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
             release_year: document.getElementById('release_year').value,
             track_number: document.getElementById('track_number').value
         };
-        fetch('/node/songs', {
+        fetch('node/songs', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(newSong)
@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Edit a song
     window.editSong = function (id) {
-        fetch(`/node/songs/${id}`)
+        fetch(`node/songs/${id}`)
             .then(response => response.json())
             .then(song => {
                 updateSongDiv.style.display = 'block';
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
             release_year: document.getElementById('update-release_year').value,
             track_number: document.getElementById('update-track_number').value
         };
-        fetch(`/node/songs/${id}`, {
+        fetch(`node/songs/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(updatedSong)
