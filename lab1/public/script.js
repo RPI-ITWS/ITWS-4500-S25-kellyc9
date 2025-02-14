@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Fetch and display all songs
     function loadSongs() {
-        fetch('/songs')
+        fetch('/node/songs')
             .then(response => response.json())
             .then(songs => {
                 songsContainer.innerHTML = ''; // Clear existing list
@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
             release_year: document.getElementById('release_year').value,
             track_number: document.getElementById('track_number').value
         };
-        fetch('/songs', {
+        fetch('/node/songs', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(newSong)
@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Edit a song
     window.editSong = function (id) {
-        fetch(`/songs/${id}`)
+        fetch(`/node/songs/${id}`)
             .then(response => response.json())
             .then(song => {
                 updateSongDiv.style.display = 'block';
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
             release_year: document.getElementById('update-release_year').value,
             track_number: document.getElementById('update-track_number').value
         };
-        fetch(`/songs/${id}`, {
+        fetch(`/node/songs/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(updatedSong)
@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Delete a song
     window.deleteSong = function (id) {
-        fetch(`/songs/${id}`, { method: 'DELETE' })
+        fetch(`/node/songs/${id}`, { method: 'DELETE' })
             .then(response => {
                 if (response.ok) {
                     loadSongs();

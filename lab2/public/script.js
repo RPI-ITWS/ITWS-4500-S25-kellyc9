@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Fetch and display songs (local & Spotify)
     function loadSongs() {
-        fetch('/spotify-songs')
+        fetch('/node/spotify-songs')
             .then(response => response.json())
             .then(data => {
                 songsContainer.innerHTML = '<h3>Local Songs</h3>';
@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Fetch and display lyrics
     window.getLyrics = function(song) {
-        fetch(`/lyrics/${encodeURIComponent(song)}`)
+        fetch(`/node/lyrics/${encodeURIComponent(song)}`)
             .then(response => response.json())
             .then(data => {
                 lyricsContainer.innerHTML = data.lyrics_url
