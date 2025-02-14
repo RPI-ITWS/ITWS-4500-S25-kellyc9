@@ -2,8 +2,14 @@ const express = require('express');
 const app = express();
 const fs = require('fs');
 const path = require('path');
+const https = require('https');
+const port = 3000;
 
 app.use(express.json());
+
+// Serving static files (like HTML, CSS, JS)
+app.use(express.static('public'));
+
 
 // The JSON data will be stored in the data.json file
 const dataPath = path.join(__dirname, 'data.json');
@@ -18,9 +24,6 @@ const readData = () => {
 const writeData = (data) => {
   fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
 };
-
-// Serving static files (like HTML, CSS, JS)
-app.use('/node', express.static('public'));
 
 // Get a frontend HTML page
 app.get('/', (req, res) => {
