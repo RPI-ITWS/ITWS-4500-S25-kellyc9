@@ -10,8 +10,13 @@ const dataPath = path.join(__dirname, 'data.json');
 
 // Helper function to read JSON data
 const readData = () => {
-  const rawData = fs.readFileSync(dataPath);
-  return JSON.parse(rawData);
+  try {
+    const rawData = fs.readFileSync(dataPath, 'utf8'); 
+    return JSON.parse(rawData);
+  } catch (error) {
+    console.error("Error reading data.json:", error);
+    return []; // Prevents crashes if file is missing or corrupt
+  }
 };
 
 // Helper function to write to the JSON data
@@ -20,7 +25,7 @@ const writeData = (data) => {
 };
 
 // Serving static files (like HTML, CSS, JS)
-app.use(express.static('public'));
+app.use('/node', express.static('public'));
 
 // Get a frontend HTML page
 app.get('/', (req, res) => {
@@ -34,7 +39,7 @@ app.get('/node/songs', (req, res) => {
 });
 
 // Get a specific song by ID
-app.get('/node/songs:id', (req, res) => {
+app.get('/node/songs/:id', (req, res) => {
   const songId = parseInt(req.params.id, 10);
   const songs = readData();
   const song = songs.find(song => song.id === songId);
