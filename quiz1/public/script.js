@@ -19,13 +19,19 @@ function populateDropdowns(currencies) {
     for (const currency in currencies) {
         const option1 = document.createElement("option");
         option1.value = currency;
-        option1.textContent = currency;
+        option1.textContent = `${currency} - ${currencies[currency]}`;
 
         const option2 = option1.cloneNode(true); // Clone for second dropdown
 
         fromSelect.appendChild(option1);
         toSelect.appendChild(option2);
+
     }
+
+    // Set default values
+    fromSelect.value = "USD";
+    toSelect.value = "EUR";
+    
 }
 
 async function convertCurrency() {
