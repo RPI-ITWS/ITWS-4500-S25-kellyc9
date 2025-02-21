@@ -7,10 +7,6 @@ h1 {
     text-align: center;
 }
 
-#songs-list, #add-song, #update-song {
-    margin-bottom: 20px;
-}
-
 button {
     padding: 10px;
     background-color: #007bff;
