@@ -31,13 +31,13 @@ app.get('/', (req, res) => {
 });
 
 // Get a list of all songs
-app.get('/node/songs', (req, res) => {
+app.get('/songs', (req, res) => {
   const songs = readData();
   res.json(songs.map(song => ({ id: song.id, title: song.title })));
 });
 
 // Get a specific song by ID
-app.get('/node/songs/:id', (req, res) => {
+app.get('/songs/:id', (req, res) => {
   const songId = parseInt(req.params.id, 10);
   const songs = readData();
   const song = songs.find(song => song.id === songId);
@@ -50,7 +50,7 @@ app.get('/node/songs/:id', (req, res) => {
 });
 
 // Add a new song
-app.post('/node/songs', (req, res) => {
+app.post('/songs', (req, res) => {
   const newSong = req.body;
   const songs = readData();
 
@@ -63,7 +63,7 @@ app.post('/node/songs', (req, res) => {
 });
 
 // Update a specific song by ID
-app.put('/node/songs/:id', (req, res) => {
+app.put('/songs/:id', (req, res) => {
   const songId = parseInt(req.params.id, 10);
   const songs = readData();
   const songIndex = songs.findIndex(song => song.id === songId);
@@ -79,14 +79,14 @@ app.put('/node/songs/:id', (req, res) => {
 });
 
 // Bulk update songs
-app.put('/node/songs', (req, res) => {
+app.put('/songs', (req, res) => {
   const songs = req.body;
   writeData(songs);
   res.status(200).json(songs);
 });
 
 // Delete a song by ID
-app.delete('/node/songs/:id', (req, res) => {
+app.delete('/songs/:id', (req, res) => {
   const songId = parseInt(req.params.id, 10);
   const songs = readData();
   const songIndex = songs.findIndex(song => song.id === songId);
