@@ -1,3 +1,6 @@
-During this lab, this was the first time we had been working with node stuff in an assignment on our own.
-This led to a little bit of trouble for me, as I found it difficult to get my site functional.
-This is also the first lab of the semester so I am a little bit rusty, but I am going to work to get this to be functional in future versions of the labs working with my API.
+To start the development of my code, I used the lab1 as a basis of how to use an API in node.
+I then changed it to work with the frankfurter API.
+I also had to spice up the css alot, since I wanted to increase the creativity.
+I want to make it clear that I used to chatgpt to check some of my answers, and do some error fixing.
+I wasn't sure if this was required if you use AI, but if you want my chat logs I can provide.
+It was also unclear whether AI was totally allowed, but I wanted to include this, so I wasn't feeling like I was hiding something.
