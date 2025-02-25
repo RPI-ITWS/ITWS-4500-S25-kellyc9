@@ -37,7 +37,7 @@ app.get('/', (req, res) => {
 });
 
 // Get Kendrick Lamar's songs from Spotify and merge with local JSON
-app.get('/node/spotify-songs', async (req, res) => {
+app.get('/spotify-songs', async (req, res) => {
     try {
         const token = await getSpotifyToken();
         const response = await axios.get(
@@ -60,7 +60,7 @@ app.get('/node/spotify-songs', async (req, res) => {
 });
 
 // Get Genius Lyrics for a Song (Similar to the Weather API Example)
-app.get('/node/lyrics/:song', async (req, res) => {
+app.get('/lyrics/:song', async (req, res) => {
     try {
         const song = req.params.song;
         const response = await axios.get(`https://api.genius.com/search?q=${encodeURIComponent(song)}`, {
