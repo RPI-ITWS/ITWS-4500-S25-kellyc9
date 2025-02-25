@@ -48,40 +48,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Edit a song
     window.editSong = function (id) {
-        fetch(`/node/songs/${id}`)
+        fetch(`/songs/${id}`)
             .then(response => response.json())
             .then(song => {
-                updateSongDiv.style.display = 'block';
-                document.getElementById('update-id').value = song.id;
-                document.getElementById('update-title').value = song.title;
-                document.getElementById('update-album').value = song.album;
-                document.getElementById('update-release_year').value = song.release_year;
-                document.getElementById('update-track_number').value = song.track_number;
-            });
+                document.getElementById("edit-delete-section").style.display = "block"; // Show edit form
+                document.getElementById("add-song").style.marginTop = "20px"; // Push Add Song form down
+    
+                // Fill form with song data
+                document.getElementById("edit-id").value = song.id;
+                document.getElementById("edit-title").value = song.title || "";
+                document.getElementById("edit-album").value = song.album || "";
+                document.getElementById("edit-release_year").value = song.release_year || "";
+                document.getElementById("edit-track_number").value = song.track_number || "";
+            })
+            .catch(error => console.error("Error fetching song:", error));
     };
+    
 
     updateSongForm.addEventListener('submit', event => {
-        event.preventDefault();
-        const id = document.getElementById('update-id').value;
-        const updatedSong = {
-            title: document.getElementById('update-title').value,
-            album: document.getElementById('update-album').value,
-            release_year: document.getElementById('update-release_year').value,
-            track_number: document.getElementById('update-track_number').value
-        };
-        fetch(`/node/songs/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(updatedSong)
-        })
-            .then(response => {
-                if (response.ok) {
-                    loadSongs();
-                    updateSongDiv.style.display = 'none';
-                } else {
-                    alert('Failed to update song');
-                }
-            });
+            event.preventDefault();
+        
+            const id = document.getElementById("edit-id").value;
+            const updatedSong = {
+                title: document.getElementById("edit-title").value,
+                album: document.getElementById("edit-album").value,
+                release_year: document.getElementById("edit-release_year").value,
+                track_number: document.getElementById("edit-track_number").value
+            };
+        
+            fetch(`/songs/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(updatedSong)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Song updated:", data);
+                document.getElementById("edit-delete-section").style.display = "none"; // Hide edit form after update
+                loadSongs(); // Refresh song list
+            })
+            .catch(error => console.error("Error updating song:", error));
     });
 
     // Delete a song
