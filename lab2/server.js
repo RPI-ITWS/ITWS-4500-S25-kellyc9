@@ -31,6 +31,11 @@ const getSpotifyToken = async () => {
     return response.data.access_token;
 };
 
+// Get a frontend HTML page
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 // Get Kendrick Lamar's songs from Spotify and merge with local JSON
 app.get('/node/spotify-songs', async (req, res) => {
     try {
