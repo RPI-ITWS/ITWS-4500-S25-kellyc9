@@ -31,7 +31,7 @@ app.get('/', (req, res) => {
 });
 
 // Get a list of all songs
-app.get("/songs", (req, res) => {
+app.get("//songs", (req, res) => {
   fs.readFile(dataFilePath, "utf8", (err, data) => {
       if (err) {
           console.error("Error reading data file:", err);
