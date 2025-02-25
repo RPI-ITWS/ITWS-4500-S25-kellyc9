@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Edit a song
     window.editSong = function (id) {
-        fetch(`/songs/${id}`)
+        fetch(`/node/songs/${id}`)
             .then(response => response.json())
             .then(song => {
                 document.getElementById("edit-delete-section").style.display = "block"; // Show edit form
