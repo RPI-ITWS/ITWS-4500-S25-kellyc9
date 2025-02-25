@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Fetch and display all songs
     function loadSongs() {
-        fetch('/node/songs')
+        fetch('/songs')
             .then(response => response.json())
             .then(songs => {
                 songsContainer.innerHTML = ''; // Clear existing list
