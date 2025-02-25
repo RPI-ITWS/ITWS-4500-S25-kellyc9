@@ -31,22 +31,17 @@ app.get('/', (req, res) => {
 });
 
 // Get a list of all songs
-app.get("//songs", (req, res) => {
-  fs.readFile(dataFilePath, "utf8", (err, data) => {
-      if (err) {
-          console.error("Error reading data file:", err);
-          return res.status(500).json({ error: "Internal Server Error" });
-      }
-      try {
-          const songs = JSON.parse(data);
-          console.log("Sending songs:", songs); // Debugging
-          res.json(songs);  // ✅ Make sure this sends full JSON, not just titles
-      } catch (parseError) {
-          console.error("Error parsing JSON:", parseError);
-          res.status(500).json({ error: "Invalid JSON format" });
-      }
-  });
+app.get('//songs', (req, res) => {
+  const songs = readData();
+  res.json(songs.map(song => ({
+    id: song.id,
+    title: song.title,
+    album: song.album,
+    release_year: song.release_year,
+    track_number: song.track_number
+  })));
 });
+
 
 // Get a specific song by ID
 app.get('//songs/:id', (req, res) => {
