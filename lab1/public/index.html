@@ -48,7 +48,7 @@
 
     <script>
         // Fetch and display songs
-        fetch('node/songs')
+        fetch('/node/songs')
             .then(response => response.json())
             .then(songs => {
                 const songsList = document.getElementById('songs-list');
@@ -84,7 +84,7 @@
                 track_number: document.getElementById('track_number').value,
             };
 
-            fetch('node/songs', {
+            fetch('/node/songs', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newSong),
@@ -112,7 +112,7 @@
                 track_number: document.getElementById('edit-track_number').value,
             };
 
-            fetch(`node/songs/${id}`, {
+            fetch(`/node/songs/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updatedSong),
@@ -131,7 +131,7 @@
         const deleteButton = document.getElementById('delete-button');
         deleteButton.addEventListener('click', () => {
             const id = document.getElementById('edit-id').value;
-            fetch(`node/songs/${id}`, { method: 'DELETE' })
+            fetch(`/node/songs/${id}`, { method: 'DELETE' })
                 .then(response => {
                     if (response.ok) {
                         alert('Song deleted successfully!');
