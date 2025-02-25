@@ -31,13 +31,13 @@ app.get('/', (req, res) => {
 });
 
 // Get a list of all songs
-app.get('/songs', (req, res) => {
+app.get('//songs', (req, res) => {
   const songs = readData();
   res.json(songs.map(song => ({ id: song.id, title: song.title })));
 });
 
 // Get a specific song by ID
-app.get('/songs/:id', (req, res) => {
+app.get('//songs/:id', (req, res) => {
   const songId = parseInt(req.params.id, 10);
   const songs = readData();
   const song = songs.find(song => song.id === songId);
