@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const songsContainer = document.getElementById('songs-container');
+    const songsContainer = document.getElementById('songs-list');
     const addSongForm = document.getElementById('add-song-form');
     const updateSongForm = document.getElementById('update-song-form');
     const updateSongDiv = document.getElementById('update-song');
