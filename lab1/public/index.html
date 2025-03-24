@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kendrick Lamar Songs</title>
+    <link rel="stylesheet" href="/node/styles.css">
+</head>
+<body>
+    <h1>Kendrick Lamar Songs</h1>
+    
+    <div id="songs-list">
+        <h2>Songs List</h2>
+        <!-- Songs will be dynamically loaded here -->
+    </div>
+
+    <div id="add-song">
+        <h2>Add a New Song</h2>
+        <form id="add-song-form">
+            <label for="title">Title:</label>
+            <input type="text" id="title" name="title" required>
+            <label for="album">Album:</label>
+            <input type="text" id="album" name="album" required>
+            <label for="release_year">Release Year:</label>
+            <input type="number" id="release_year" name="release_year" required>
+            <label for="track_number">Track Number:</label>
+            <input type="number" id="track_number" name="track_number" required>
+            <button type="submit">Add Song</button>
+        </form>
+    </div>
+
+    <div id="edit-delete-section" style="display: none;">
+        <h2>Edit or Delete Song</h2>
+        <form id="update-song-form">
+            <input type="hidden" id="edit-id">
+            <label for="edit-title">Title:</label>
+            <input type="text" id="edit-title" required>
+            <label for="edit-album">Album:</label>
+            <input type="text" id="edit-album" required>
+            <label for="edit-release_year">Release Year:</label>
+            <input type="number" id="edit-release_year" required>
+            <label for="edit-track_number">Track Number:</label>
+            <input type="number" id="edit-track_number" required>
+            <button type="submit">Update Song</button>
+        </form>
+        <button id="delete-button" style="background-color: red; color: white;">Delete Song</button>
+    </div>
+
+    <script src="/node/script.js" defer></script>
+</body>
+</html>
