@@ -5,7 +5,7 @@ const path = require('path');
 
 const app = express();
 app.use(express.json());
-app.use(express.static('public'));
+app.use('/node', express.static('public'));
 
 const dataPath = path.join(__dirname, 'data.json');
 const readData = () => JSON.parse(fs.readFileSync(dataPath));
@@ -30,6 +30,11 @@ const getSpotifyToken = async () => {
     );
     return response.data.access_token;
 };
+
+// Get a frontend HTML page
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // Get Kendrick Lamar's songs from Spotify and merge with local JSON
 app.get('/spotify-songs', async (req, res) => {

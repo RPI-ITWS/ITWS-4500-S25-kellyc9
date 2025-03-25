@@ -1,0 +1,20 @@
+{
+  "name": "lab1",
+  "version": "1.0.0",
+  "description": "Custom API using Express",
+  "repository": {
+    "type": "git",
+    "url": "ITWS-4500-S25-kellyc9"
+  },
+  "license": "ISC",
+  "author": "Cooper Kelly",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

@@ -2,8 +2,14 @@ const express = require('express');
 const app = express();
 const fs = require('fs');
 const path = require('path');
+const https = require('https');
+const port = 3000;
 
 app.use(express.json());
+
+// Serving static files (like HTML, CSS, JS)
+app.use(express.static('public'));
+
 
 // The JSON data will be stored in the data.json file
 const dataPath = path.join(__dirname, 'data.json');
@@ -19,22 +25,26 @@ const writeData = (data) => {
   fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
 };
 
-// Serving static files (like HTML, CSS, JS)
-app.use(express.static('public'));
-
 // Get a frontend HTML page
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Get a list of all songs
-app.get('/songs', (req, res) => {
+app.get('//songs', (req, res) => {
   const songs = readData();
-  res.json(songs.map(song => ({ id: song.id, title: song.title })));
+  res.json(songs.map(song => ({
+    id: song.id,
+    title: song.title,
+    album: song.album,
+    release_year: song.release_year,
+    track_number: song.track_number
+  })));
 });
 
+
 // Get a specific song by ID
-app.get('/songs/:id', (req, res) => {
+app.get('//songs/:id', (req, res) => {
   const songId = parseInt(req.params.id, 10);
   const songs = readData();
   const song = songs.find(song => song.id === songId);
@@ -47,12 +57,12 @@ app.get('/songs/:id', (req, res) => {
 });
 
 // Add a new song
-app.post('/songs', (req, res) => {
+app.post('//songs', (req, res) => {
   const newSong = req.body;
   const songs = readData();
 
   // Ensure unique IDs
-  newSong.id = songs.length ? Math.max(songs.map(song => song.id)) + 1 : 1;
+  newSong.id = songs.length ? Math.max(...songs.map(song => song.id)) + 1 : 1;
   
   songs.push(newSong);
   writeData(songs);
@@ -60,7 +70,7 @@ app.post('/songs', (req, res) => {
 });
 
 // Update a specific song by ID
-app.put('/songs/:id', (req, res) => {
+app.put('//songs/:id', (req, res) => {
   const songId = parseInt(req.params.id, 10);
   const songs = readData();
   const songIndex = songs.findIndex(song => song.id === songId);
@@ -76,14 +86,14 @@ app.put('/songs/:id', (req, res) => {
 });
 
 // Bulk update songs
-app.put('/songs', (req, res) => {
+app.put('//songs', (req, res) => {
   const songs = req.body;
   writeData(songs);
   res.status(200).json(songs);
 });
 
 // Delete a song by ID
-app.delete('/songs/:id', (req, res) => {
+app.delete('//songs/:id', (req, res) => {
   const songId = parseInt(req.params.id, 10);
   const songs = readData();
   const songIndex = songs.findIndex(song => song.id === songId);

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kendrick Lamar Songs</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="/node/styles.css">
 </head>
 <body>
     <h1>Kendrick Lamar Songs</h1>
@@ -31,7 +31,7 @@
 
     <div id="edit-delete-section" style="display: none;">
         <h2>Edit or Delete Song</h2>
-        <form id="edit-song-form">
+        <form id="update-song-form">
             <input type="hidden" id="edit-id">
             <label for="edit-title">Title:</label>
             <input type="text" id="edit-title" required>
@@ -46,104 +46,6 @@
         <button id="delete-button" style="background-color: red; color: white;">Delete Song</button>
     </div>
 
-    <script>
-        // Fetch and display songs
-        fetch('/songs')
-            .then(response => response.json())
-            .then(songs => {
-                const songsList = document.getElementById('songs-list');
-                songs.forEach(song => {
-                    const songItem = document.createElement('div');
-                    songItem.textContent = `${song.id}: ${song.title}`;
-                    songItem.setAttribute('data-id', song.id);
-                    songItem.style.cursor = 'pointer';
-
-                    // When a song is clicked, populate the edit/delete section
-                    songItem.addEventListener('click', () => {
-                        document.getElementById('edit-id').value = song.id;
-                        document.getElementById('edit-title').value = song.title;
-                        document.getElementById('edit-album').value = song.album;
-                        document.getElementById('edit-release_year').value = song.release_year;
-                        document.getElementById('edit-track_number').value = song.track_number;
-                        document.getElementById('edit-delete-section').style.display = 'block';
-                    });
-
-                    songsList.appendChild(songItem);
-                });
-            });
-
-        // Add a new song
-        const addSongForm = document.getElementById('add-song-form');
-        addSongForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-
-            const newSong = {
-                title: document.getElementById('title').value,
-                album: document.getElementById('album').value,
-                release_year: document.getElementById('release_year').value,
-                track_number: document.getElementById('track_number').value,
-            };
-
-            fetch('/songs', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newSong),
-            })
-                .then(response => response.json())
-                .then(() => {
-                    alert('Song added successfully!');
-                    location.reload(); // Refresh the list
-                })
-                .catch(err => {
-                    console.error('Error adding song:', err);
-                });
-        });
-
-        // Update an existing song
-        const editSongForm = document.getElementById('edit-song-form');
-        editSongForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-
-            const id = document.getElementById('edit-id').value;
-            const updatedSong = {
-                title: document.getElementById('edit-title').value,
-                album: document.getElementById('edit-album').value,
-                release_year: document.getElementById('edit-release_year').value,
-                track_number: document.getElementById('edit-track_number').value,
-            };
-
-            fetch(`/songs/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updatedSong),
-            })
-                .then(response => response.json())
-                .then(() => {
-                    alert('Song updated successfully!');
-                    location.reload(); // Refresh the list
-                })
-                .catch(err => {
-                    console.error('Error updating song:', err);
-                });
-        });
-
-        // Delete a song
-        const deleteButton = document.getElementById('delete-button');
-        deleteButton.addEventListener('click', () => {
-            const id = document.getElementById('edit-id').value;
-            fetch(`/songs/${id}`, { method: 'DELETE' })
-                .then(response => {
-                    if (response.ok) {
-                        alert('Song deleted successfully!');
-                        location.reload(); // Refresh the list
-                    } else {
-                        alert('Failed to delete song. Please try again.');
-                    }
-                })
-                .catch(err => {
-                    console.error('Error deleting song:', err);
-                });
-        });
-    </script>
+    <script src="/node/script.js" defer></script>
 </body>
 </html>
