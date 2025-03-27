@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 track_number: document.getElementById("edit-track_number").value
             };
         
-            fetch(`/songs/${id}`, {
+            fetch(`/node/songs/${id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(updatedSong)
