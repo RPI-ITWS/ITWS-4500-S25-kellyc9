@@ -17,6 +17,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     `;
                     songsContainer.appendChild(songItem);
                 });
+
+                songsContainer.innerHTML += '<h3>Spotify Songs</h3>';
+                data.spotifySongs.forEach(song => {
+                    const songItem = document.createElement('li');
+                    songItem.innerHTML = `
+                        <a href="${song.spotify_url}" target="_blank">${song.title}</a> (${song.album})
+                        <button onclick="getLyrics('${song.title}')">Get Lyrics</button>
+                    `;
+                    songsContainer.appendChild(songItem);
+                });
             });
     }
 });
