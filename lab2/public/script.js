@@ -8,13 +8,13 @@ document.addEventListener('DOMContentLoaded', () => {
         fetch('/node/spotify-songs')
             .then(response => response.json())
             .then(data => {
-                songsContainer.innerHTML = '<h2>Songs</h2>';
+                songsContainer.innerHTML = '';
                 data.localSongs.forEach(song => {
                     const songItem = document.createElement('li');
                     songItem.innerHTML = `
-                    ${song.title} (${song.album})
-                    ${song.spotify_url ? `<a href="${song.spotify_url}" target="_blank">▶️</a>` : ''}
-                    ${song.genius_url ? `<a href="${song.genius_url}" target="_blank">Lyrics</a>` : ''}
+                        ${song.title} (${song.album})
+                        ${song.spotify_url ? `<a href="${song.spotify_url}" target="_blank">▶️</a>` : ''}
+                        ${song.genius_url ? `<a href="${song.genius_url}" target="_blank">Lyrics</a>` : ''}
                     `;
                     songsContainer.appendChild(songItem);
                 });
