@@ -53,7 +53,29 @@ app.get('//spotify-songs', async (req, res) => {
 
         // Merge with local JSON data
         const localSongs = readData();
-        res.json({ localSongs, spotifySongs });
+
+        // Enrich localSongs with Spotify and Genius links
+        const enrichedLocalSongs = await Promise.all(localSongs.map(async (localSong) => {
+            const spotifyMatch = spotifySongs.find(song => song.title.toLowerCase() === localSong.title.toLowerCase());
+            let geniusUrl = null;
+
+            try {
+                const geniusRes = await axios.get(`https://api.genius.com/search?q=${encodeURIComponent(localSong.title)}`, {
+                    headers: { Authorization: `Bearer ${GENIUS_ACCESS_TOKEN}` }
+                });
+                geniusUrl = geniusRes.data.response.hits[0]?.result.url || null;
+            } catch (e) {
+                geniusUrl = null;
+            }
+
+            return {
+                ...localSong,
+                spotify_url: spotifyMatch ? spotifyMatch.spotify_url : null,
+                genius_url: geniusUrl
+            };
+        }));
+
+        res.json({ localSongs: enrichedLocalSongs, spotifySongs });
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch Spotify songs', details: error.message });
     }

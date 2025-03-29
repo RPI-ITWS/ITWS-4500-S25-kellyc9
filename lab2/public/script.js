@@ -10,7 +10,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 songsContainer.innerHTML = '<h3>Local Songs</h3>';
                 data.localSongs.forEach(song => {
                     const songItem = document.createElement('li');
-                    songItem.innerHTML = `${song.title} (${song.album})`;
+                    songItem.innerHTML = `
+        ${song.title} (${song.album})
+        ${song.spotify_url ? `<a href="${song.spotify_url}" target="_blank">▶️</a>` : ''}
+        ${song.genius_url ? `<a href="${song.genius_url}" target="_blank">📄 Lyrics</a>` : ''}
+    `;
                     songsContainer.appendChild(songItem);
                 });
 
