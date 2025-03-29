@@ -57,6 +57,7 @@ app.get('//spotify-songs', async (req, res) => {
         // Enrich localSongs with Spotify and Genius links
         const enrichedLocalSongs = await Promise.all(localSongs.map(async (localSong) => {
             const spotifyMatch = spotifySongs.find(song => song.title.toLowerCase() === localSong.title.toLowerCase());
+            console.log(`Searching for: ${localSong.title}`);
             let geniusUrl = null;
 
             try {
@@ -91,7 +92,6 @@ app.get('//lyrics/:song', async (req, res) => {
 
         const songUrl = response.data.response.hits[0]?.result.url;
         if (!songUrl) return res.status(404).json({ error: "Lyrics not found" });
-        console.log(`${localSong.title}:`, spotify_url);
 
         res.json({ song, lyrics_url: songUrl });
     } catch (error) {
