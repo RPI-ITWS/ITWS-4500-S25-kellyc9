@@ -29,4 +29,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
     }
+
+    // Fetch and display lyrics
+    window.getLyrics = function(song) {
+        fetch(`/node/lyrics/${encodeURIComponent(song)}`)
+            .then(response => response.json())
+            .then(data => {
+                lyricsContainer.innerHTML = data.lyrics_url
+                    ? `<a href="${data.lyrics_url}" target="_blank">View Lyrics on Genius</a>`
+                    : 'Lyrics not found';
+            });
+    };
+
+    loadSongs();
 });
