@@ -11,11 +11,11 @@ const dataPath = path.join(__dirname, 'data.json');
 const readData = () => JSON.parse(fs.readFileSync(dataPath));
 
 // Spotify API Credentials
-const SPOTIFY_CLIENT_ID = "abaf98e3885e4b1780ac4f249b9c603c";
-const SPOTIFY_CLIENT_SECRET = "48d819a941f746469ccaedbff1cb02ab";
+const SPOTIFY_CLIENT_ID = "your_spotify_id";
+const SPOTIFY_CLIENT_SECRET = "your_spotify_client_secret";
 
 // Genius API Credentials
-const GENIUS_ACCESS_TOKEN = "Mx1Jtkdg34TcRW14yl8J3udQglgZ0MCz2i1-q7vUvDIVzK3raIcwWGIBaCaw1JNL";
+const GENIUS_ACCESS_TOKEN = "your_genius_access_token";
 
 // Fetch Spotify Access Token
 const getSpotifyToken = async () => {
@@ -76,19 +76,9 @@ app.get('//spotify-songs', async (req, res) => {
                         album: track.album.name,
                         spotify_url: track.external_urls.spotify
                     };
-
-                    // Log potential mismatches
-                    if (normalize(track.name) !== normalize(localSong.title) || normalize(track.album.name) !== normalize(localSong.album)) {
-                        console.log(`Potential mismatch for "${localSong.title}": Matched "${track.name}" from album "${track.album.name}"`);
-                    }
                 }
             } catch (err) {
                 console.error(`Spotify API error for "${localSong.title}":`, err.message);
-            }
-
-            // Log unmatched songs
-            if (!spotifyMatch) {
-                console.log(`No Spotify match for "${localSong.title}"`);
             }
 
             // Fetch Genius URL
