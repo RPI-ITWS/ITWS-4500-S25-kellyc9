@@ -42,87 +42,62 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-const pLimit = require('p-limit');
-const limit = pLimit(5); // Limit to 5 concurrent requests
-const spotifyCache = new Map();
-
-const fetchSpotifyData = async (query, token) => {
-    try {
-        const response = await axios.get('https://api.spotify.com/v1/search', {
-            headers: { Authorization: `Bearer ${token}` },
-            params: {
-                q: query,
-                type: 'track',
-                limit: 5
-            }
-        });
-        return response.data.tracks.items;
-    } catch (err) {
-        if (err.response && err.response.status === 429) {
-            const retryAfter = parseInt(err.response.headers['retry-after'], 10) * 1000;
-            console.warn(`Rate limited. Retrying after ${retryAfter}ms...`);
-            await new Promise(resolve => setTimeout(resolve, retryAfter));
-            return fetchSpotifyData(query, token);
-        } else {
-            throw err;
-        }
-    }
-};
-
-const fetchSpotifyDataWithCache = async (query, token) => {
-    if (spotifyCache.has(query)) {
-        return spotifyCache.get(query);
-    }
-
-    const results = await fetchSpotifyData(query, token);
-    spotifyCache.set(query, results);
-    return results;
-};
-
+// Get Kendrick Lamar's songs from Spotify and merge with local JSON
 app.get('//spotify-songs', async (req, res) => {
     try {
+        // Fetch the Spotify access token
         const SPOTIFY_ACCESS_TOKEN = await getSpotifyToken();
+
         const localSongs = readData();
 
-        const enrichedLocalSongs = await Promise.all(localSongs.map(localSong =>
-            limit(async () => {
-                let spotifyMatch = null;
+        const enrichedLocalSongs = await Promise.all(localSongs.map(async (localSong) => {
+            let spotifyMatch = null;
 
-                try {
-                    const spotifyRes = await fetchSpotifyDataWithCache(`${localSong.title} ${localSong.album} kendrick lamar`, SPOTIFY_ACCESS_TOKEN);
-                    const track = spotifyRes.find(item => 
-                        normalize(item.name) === normalize(localSong.title) &&
-                        normalize(item.album.name) === normalize(localSong.album)
-                    ) || spotifyRes[0];
-
-                    if (track) {
-                        spotifyMatch = {
-                            title: track.name,
-                            album: track.album.name,
-                            spotify_url: track.external_urls.spotify
-                        };
+            try {
+                // Fetch Spotify data for the current song
+                const spotifyRes = await axios.get('https://api.spotify.com/v1/search', {
+                    headers: { Authorization: `Bearer ${SPOTIFY_ACCESS_TOKEN}` },
+                    params: {
+                        q: `${localSong.title} ${localSong.album} kendrick lamar`, // Include album and artist
+                        type: 'track',
+                        limit: 5 // Fetch multiple results
                     }
-                } catch (err) {
-                    console.error(`Spotify API error for "${localSong.title}":`, err.message);
-                }
+                });
 
-                let geniusUrl = null;
-                try {
-                    const geniusRes = await axios.get(`https://api.genius.com/search?q=${encodeURIComponent(localSong.title)}`, {
-                        headers: { Authorization: `Bearer ${GENIUS_ACCESS_TOKEN}` }
-                    });
-                    geniusUrl = geniusRes.data.response.hits[0]?.result.url || null;
-                } catch (e) {
-                    console.error(`Genius API error for "${localSong.title}":`, e.message);
-                }
+                // Validate the results to find the best match
+                const track = spotifyRes.data.tracks.items.find(item => 
+                    normalize(item.name) === normalize(localSong.title) &&
+                    normalize(item.album.name) === normalize(localSong.album)
+                ) || spotifyRes.data.tracks.items[0]; // Fallback to the first result
 
-                return {
-                    ...localSong,
-                    spotify_url: spotifyMatch ? spotifyMatch.spotify_url : null,
-                    genius_url: geniusUrl
-                };
-            })
-        ));
+                if (track) {
+                    spotifyMatch = {
+                        title: track.name,
+                        album: track.album.name,
+                        spotify_url: track.external_urls.spotify
+                    };
+                }
+            } catch (err) {
+                console.error(`Spotify API error for "${localSong.title}":`, err.message);
+            }
+
+            // Fetch Genius URL
+            let geniusUrl = null;
+            try {
+                const geniusRes = await axios.get(`https://api.genius.com/search?q=${encodeURIComponent(localSong.title)}`, {
+                    headers: { Authorization: `Bearer ${GENIUS_ACCESS_TOKEN}` }
+                });
+                geniusUrl = geniusRes.data.response.hits[0]?.result.url || null;
+            } catch (e) {
+                console.error(`Genius API error for "${localSong.title}":`, e.message);
+            }
+
+            return {
+                ...localSong,
+                spotify_url: spotifyMatch ? spotifyMatch.spotify_url : null,
+                genius_url: geniusUrl
+            };
+        }));
 
         res.json({ localSongs: enrichedLocalSongs });
     } catch (error) {
