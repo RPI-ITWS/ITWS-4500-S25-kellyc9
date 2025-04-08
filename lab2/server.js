@@ -43,7 +43,7 @@ app.get('/', (req, res) => {
 });
 
 // Get Kendrick Lamar's songs from Spotify and merge with local JSON
-app.get('/spotify-songs', async (req, res) => {
+app.get('//spotify-songs', async (req, res) => {
     try {
         // Fetch the Spotify access token
         const SPOTIFY_ACCESS_TOKEN = await getSpotifyToken();
@@ -118,7 +118,7 @@ app.get('/spotify-songs', async (req, res) => {
 });
 
 // Get Genius Lyrics for a Song
-app.get('/lyrics/:song', async (req, res) => {
+app.get('//lyrics/:song', async (req, res) => {
     try {
         const song = req.params.song;
         const response = await axios.get(`https://api.genius.com/search?q=${encodeURIComponent(song)}`, {
