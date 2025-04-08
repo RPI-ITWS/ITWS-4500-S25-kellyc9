@@ -50,24 +50,24 @@ app.get('//spotify-songs', async (req, res) => {
             spotify_url: song.external_urls.spotify
         }));
 
-        // Merge with local JSON data
         const localSongs = readData();
 
-        // Normalize function for better matching
         const normalize = (str) => str.toLowerCase().replace(/[^a-z0-9\s]/gi, '').trim();
 
-        // Enrich localSongs with Spotify and Genius links
         const enrichedLocalSongs = await Promise.all(localSongs.map(async (localSong) => {
-            // Try to find an exact match
             let spotifyMatch = spotifySongs.find(song => normalize(song.title) === normalize(localSong.title));
 
-            // Fallback: Try partial matching if no exact match is found
+            // Fallback: Try partial matching
             if (!spotifyMatch) {
                 spotifyMatch = spotifySongs.find(song => normalize(song.title).includes(normalize(localSong.title)));
             }
 
-            let geniusUrl = null;
+            // Log unmatched songs
+            if (!spotifyMatch) {
+                console.log(`No Spotify match for "${localSong.title}"`);
+            }
 
+            let geniusUrl = null;
             try {
                 const geniusRes = await axios.get(`https://api.genius.com/search?q=${encodeURIComponent(localSong.title)}`, {
                     headers: { Authorization: `Bearer ${GENIUS_ACCESS_TOKEN}` }
@@ -75,11 +75,7 @@ app.get('//spotify-songs', async (req, res) => {
                 geniusUrl = geniusRes.data.response.hits[0]?.result.url || null;
             } catch (e) {
                 console.error(`Genius API error for "${localSong.title}":`, e.message);
-                geniusUrl = null;
             }
-
-            // Debug logging for Spotify match
-            console.log(`Spotify match for "${localSong.title}":`, spotifyMatch ? spotifyMatch.spotify_url : 'No match found');
 
             return {
                 ...localSong,
