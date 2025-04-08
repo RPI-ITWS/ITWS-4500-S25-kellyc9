@@ -1,5 +1,5 @@
 // Fetch songs from the backend and display them
-fetch('/spotify-songs')
+fetch('//spotify-songs')
   .then(res => res.json())
   .then(data => {
     const songsContainer = document.getElementById('songs-container');
