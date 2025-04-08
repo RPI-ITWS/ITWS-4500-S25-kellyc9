@@ -57,7 +57,6 @@ app.get('//spotify-songs', async (req, res) => {
         // Enrich localSongs with Spotify and Genius links
         const enrichedLocalSongs = await Promise.all(localSongs.map(async (localSong) => {
             const spotifyMatch = spotifySongs.find(song => song.title.toLowerCase() === localSong.title.toLowerCase());
-            console.log(`Searching for: ${localSong.title}`);
             let geniusUrl = null;
 
             try {
