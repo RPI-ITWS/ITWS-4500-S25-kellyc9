@@ -11,11 +11,11 @@ const dataPath = path.join(__dirname, 'data.json');
 const readData = () => JSON.parse(fs.readFileSync(dataPath));
 
 // Spotify API Credentials
-const SPOTIFY_CLIENT_ID = "your_spotify_client_id";
-const SPOTIFY_CLIENT_SECRET = "your_spotify_client_secret";
+const SPOTIFY_CLIENT_ID = "abaf98e3885e4b1780ac4f249b9c603c";
+const SPOTIFY_CLIENT_SECRET = "48d819a941f746469ccaedbff1cb02ab";
 
 // Genius API Credentials
-const GENIUS_ACCESS_TOKEN = "your_genius_access_token";
+const GENIUS_ACCESS_TOKEN = "Mx1Jtkdg34TcRW14yl8J3udQglgZ0MCz2i1-q7vUvDIVzK3raIcwWGIBaCaw1JNL";
 
 // Fetch Spotify Access Token
 const getSpotifyToken = async () => {
