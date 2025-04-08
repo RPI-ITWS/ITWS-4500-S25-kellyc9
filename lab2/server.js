@@ -40,7 +40,7 @@ app.get('//spotify-songs', async (req, res) => {
     try {
         const token = await getSpotifyToken();
         const response = await axios.get(
-            'https://api.spotify.com/v1/search?q=kendrick+lamar&type=track&limit=10', 
+            'https://api.spotify.com/v1/search?q=kendrick+lamar&type=track&limit=50', 
             { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -53,9 +53,19 @@ app.get('//spotify-songs', async (req, res) => {
         // Merge with local JSON data
         const localSongs = readData();
 
+        // Normalize function for better matching
+        const normalize = (str) => str.toLowerCase().replace(/[^a-z0-9\s]/gi, '').trim();
+
         // Enrich localSongs with Spotify and Genius links
         const enrichedLocalSongs = await Promise.all(localSongs.map(async (localSong) => {
-            const spotifyMatch = spotifySongs.find(song => song.title.toLowerCase() === localSong.title.toLowerCase());
+            // Try to find an exact match
+            let spotifyMatch = spotifySongs.find(song => normalize(song.title) === normalize(localSong.title));
+
+            // Fallback: Try partial matching if no exact match is found
+            if (!spotifyMatch) {
+                spotifyMatch = spotifySongs.find(song => normalize(song.title).includes(normalize(localSong.title)));
+            }
+
             let geniusUrl = null;
 
             try {
@@ -64,8 +74,12 @@ app.get('//spotify-songs', async (req, res) => {
                 });
                 geniusUrl = geniusRes.data.response.hits[0]?.result.url || null;
             } catch (e) {
+                console.error(`Genius API error for "${localSong.title}":`, e.message);
                 geniusUrl = null;
             }
+
+            // Debug logging for Spotify match
+            console.log(`Spotify match for "${localSong.title}":`, spotifyMatch ? spotifyMatch.spotify_url : 'No match found');
 
             return {
                 ...localSong,
@@ -74,8 +88,9 @@ app.get('//spotify-songs', async (req, res) => {
             };
         }));
 
-        res.json({ localSongs: enrichedLocalSongs, spotifySongs });
+        res.json({ localSongs: enrichedLocalSongs });
     } catch (error) {
+        console.error('Error fetching Spotify songs:', error.message);
         res.status(500).json({ error: 'Failed to fetch Spotify songs', details: error.message });
     }
 });
