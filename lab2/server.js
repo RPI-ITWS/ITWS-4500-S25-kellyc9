@@ -90,7 +90,7 @@ app.get('/spotify-songs', async (req, res) => {
 });
 
 // Get Genius Lyrics for a Song
-app.get('/lyrics/:song', async (req, res) => {
+app.get('//lyrics/:song', async (req, res) => {
     try {
         const song = req.params.song;
         const response = await axios.get(`https://api.genius.com/search?q=${encodeURIComponent(song)}`, {
