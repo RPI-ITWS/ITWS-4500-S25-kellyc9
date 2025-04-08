@@ -52,7 +52,10 @@ app.get('//spotify-songs', async (req, res) => {
 
         const localSongs = readData();
 
-        const normalize = (str) => str.toLowerCase().replace(/[^a-z0-9\s]/gi, '').trim();
+        const normalize = (str) => str
+            .toLowerCase()
+            .replace(/[^a-z0-9\s]/gi, '') // Remove special characters
+            .trim();
 
         const enrichedLocalSongs = await Promise.all(localSongs.map(async (localSong) => {
             let spotifyMatch = spotifySongs.find(song => normalize(song.title) === normalize(localSong.title));
