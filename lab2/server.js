@@ -79,7 +79,7 @@ const fetchSpotifyDataWithCache = async (query, token) => {
     return results;
 };
 
-app.get('/spotify-songs', async (req, res) => {
+app.get('//spotify-songs', async (req, res) => {
     try {
         const SPOTIFY_ACCESS_TOKEN = await getSpotifyToken();
         const localSongs = readData();
