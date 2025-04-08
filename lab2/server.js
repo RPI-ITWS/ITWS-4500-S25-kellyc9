@@ -40,7 +40,7 @@ app.get('/', (req, res) => {
 });
 
 // Get Kendrick Lamar's songs from Spotify and merge with local JSON
-app.get('/spotify-songs', async (req, res) => {
+app.get('//spotify-songs', async (req, res) => {
     try {
         const token = await getSpotifyToken();
         const response = await axios.get(
