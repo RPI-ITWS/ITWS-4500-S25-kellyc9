@@ -94,7 +94,7 @@ app.get('//spotify-songs', async (req, res) => {
 });
 
 // New Endpoint from Lab 1: Fetch a single song by title
-app.get('/songs/:title', (req, res) => {
+app.get('//songs/:title', (req, res) => {
     const { title } = req.params;
     const localSongs = readData();
     const song = localSongs.find(song => normalize(song.title) === normalize(title));
@@ -107,7 +107,7 @@ app.get('/songs/:title', (req, res) => {
 });
 
 // New Endpoint from Lab 1: Add a new song
-app.post('/songs', async (req, res) => {
+app.post('//songs', async (req, res) => {
     const { title, album } = req.body;
 
     if (!title || !album) {
@@ -134,7 +134,7 @@ app.post('/songs', async (req, res) => {
 });
 
 // New Endpoint from Lab 1: Update a song's album
-app.put('/songs/:title', (req, res) => {
+app.put('//songs/:title', (req, res) => {
     const { title } = req.params;
     const { album } = req.body;
 
