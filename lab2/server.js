@@ -57,35 +57,59 @@ app.get('//spotify-songs', async (req, res) => {
             .replace(/[^a-z0-9\s]/gi, '') // Remove special characters
             .trim();
 
-        const enrichedLocalSongs = await Promise.all(localSongs.map(async (localSong) => {
-            let spotifyMatch = spotifySongs.find(song => normalize(song.title) === normalize(localSong.title));
-
-            // Fallback: Try partial matching
-            if (!spotifyMatch) {
-                spotifyMatch = spotifySongs.find(song => normalize(song.title).includes(normalize(localSong.title)));
-            }
-
-            // Log unmatched songs
-            if (!spotifyMatch) {
-                console.log(`No Spotify match for "${localSong.title}"`);
-            }
-
-            let geniusUrl = null;
-            try {
-                const geniusRes = await axios.get(`https://api.genius.com/search?q=${encodeURIComponent(localSong.title)}`, {
-                    headers: { Authorization: `Bearer ${GENIUS_ACCESS_TOKEN}` }
-                });
-                geniusUrl = geniusRes.data.response.hits[0]?.result.url || null;
-            } catch (e) {
-                console.error(`Genius API error for "${localSong.title}":`, e.message);
-            }
-
-            return {
-                ...localSong,
-                spotify_url: spotifyMatch ? spotifyMatch.spotify_url : null,
-                genius_url: geniusUrl
-            };
-        }));
+            const enrichedLocalSongs = await Promise.all(localSongs.map(async (localSong) => {
+                let spotifyMatch = null;
+            
+                try {
+                    // Fetch Spotify data for the current song
+                    const spotifyRes = await axios.get('https://api.spotify.com/v1/search', {
+                        headers: { Authorization: `Bearer ${SPOTIFY_ACCESS_TOKEN}` },
+                        params: {
+                            q: `${localSong.title} ${localSong.album} kendrick lamar`, // Include album and artist
+                            type: 'track',
+                            limit: 1
+                        }
+                    });
+            
+                    const track = spotifyRes.data.tracks.items[0];
+                    if (track) {
+                        spotifyMatch = {
+                            title: track.name,
+                            album: track.album.name,
+                            spotify_url: track.external_urls.spotify
+                        };
+                    }
+                } catch (err) {
+                    console.error(`Spotify API error for "${localSong.title}":`, err.message);
+                }
+            
+                // Fallback: Try partial matching if no exact match is found
+                if (!spotifyMatch) {
+                    spotifyMatch = spotifySongs.find(song => normalize(song.title).includes(normalize(localSong.title)));
+                }
+            
+                // Log unmatched songs
+                if (!spotifyMatch) {
+                    console.log(`No Spotify match for "${localSong.title}"`);
+                }
+            
+                // Fetch Genius URL
+                let geniusUrl = null;
+                try {
+                    const geniusRes = await axios.get(`https://api.genius.com/search?q=${encodeURIComponent(localSong.title)}`, {
+                        headers: { Authorization: `Bearer ${GENIUS_ACCESS_TOKEN}` }
+                    });
+                    geniusUrl = geniusRes.data.response.hits[0]?.result.url || null;
+                } catch (e) {
+                    console.error(`Genius API error for "${localSong.title}":`, e.message);
+                }
+            
+                return {
+                    ...localSong,
+                    spotify_url: spotifyMatch ? spotifyMatch.spotify_url : null,
+                    genius_url: geniusUrl
+                };
+            }));
 
         res.json({ localSongs: enrichedLocalSongs });
     } catch (error) {
