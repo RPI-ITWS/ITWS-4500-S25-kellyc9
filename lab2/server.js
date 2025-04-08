@@ -2,7 +2,6 @@ const express = require('express');
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
-
 const app = express();
 app.use(express.json());
 app.use(express.static('public'));
@@ -11,11 +10,11 @@ const dataPath = path.join(__dirname, 'data.json');
 const readData = () => JSON.parse(fs.readFileSync(dataPath));
 
 // Spotify API Credentials
-const SPOTIFY_CLIENT_ID = "your_spotify_client_id";
-const SPOTIFY_CLIENT_SECRET = "your_spotify_client_secret";
+const SPOTIFY_CLIENT_ID = "abaf98e3885e4b1780ac4f249b9c603c";
+const SPOTIFY_CLIENT_SECRET = "48d819a941f746469ccaedbff1cb02ab";
 
 // Genius API Credentials
-const GENIUS_ACCESS_TOKEN = "your_genius_access_token";
+const GENIUS_ACCESS_TOKEN = "Mx1Jtkdg34TcRW14yl8J3udQglgZ0MCz2i1-q7vUvDIVzK3raIcwWGIBaCaw1JNL";
 
 // Fetch Spotify Access Token
 const getSpotifyToken = async () => {
@@ -31,9 +30,6 @@ const getSpotifyToken = async () => {
     return response.data.access_token;
 };
 
-// Normalize string for better matching
-const normalize = (str) => str.toLowerCase().replace(/[^a-z0-9\s]/gi, '').trim();
-
 // Get a frontend HTML page
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
@@ -44,7 +40,7 @@ app.get('//spotify-songs', async (req, res) => {
     try {
         const token = await getSpotifyToken();
         const response = await axios.get(
-            'https://api.spotify.com/v1/search?q=kendrick+lamar&type=track&limit=50', 
+            'https://api.spotify.com/v1/search?q=kendrick+lamar&type=track&limit=10', 
             { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -59,7 +55,7 @@ app.get('//spotify-songs', async (req, res) => {
 
         // Enrich localSongs with Spotify and Genius links
         const enrichedLocalSongs = await Promise.all(localSongs.map(async (localSong) => {
-            const spotifyMatch = spotifySongs.find(song => normalize(song.title) === normalize(localSong.title));
+            const spotifyMatch = spotifySongs.find(song => song.title.toLowerCase() === localSong.title.toLowerCase());
             let geniusUrl = null;
 
             try {
@@ -68,12 +64,8 @@ app.get('//spotify-songs', async (req, res) => {
                 });
                 geniusUrl = geniusRes.data.response.hits[0]?.result.url || null;
             } catch (e) {
-                console.error(`Genius API error for "${localSong.title}":`, e.message);
                 geniusUrl = null;
             }
-
-            // Debug logging for Spotify match
-            console.log(`Spotify match for "${localSong.title}":`, spotifyMatch ? spotifyMatch.spotify_url : 'No match found');
 
             return {
                 ...localSong,
@@ -82,14 +74,13 @@ app.get('//spotify-songs', async (req, res) => {
             };
         }));
 
-        res.json({ localSongs: enrichedLocalSongs });
+        res.json({ localSongs: enrichedLocalSongs, spotifySongs });
     } catch (error) {
-        console.error('Error fetching Spotify songs:', error.message);
         res.status(500).json({ error: 'Failed to fetch Spotify songs', details: error.message });
     }
 });
 
-// Get Genius Lyrics for a Song
+// Get Genius Lyrics for a Song (Similar to the Weather API Example)
 app.get('//lyrics/:song', async (req, res) => {
     try {
         const song = req.params.song;
@@ -102,7 +93,6 @@ app.get('//lyrics/:song', async (req, res) => {
 
         res.json({ song, lyrics_url: songUrl });
     } catch (error) {
-        console.error(`Error fetching lyrics for "${req.params.song}":`, error.message);
         res.status(500).json({ error: 'Failed to fetch lyrics', details: error.message });
     }
 });
