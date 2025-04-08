@@ -48,17 +48,6 @@ app.get('//spotify-songs', async (req, res) => {
         // Fetch the Spotify access token
         const SPOTIFY_ACCESS_TOKEN = await getSpotifyToken();
 
-        const response = await axios.get(
-            'https://api.spotify.com/v1/search?q=kendrick+lamar&type=track&limit=50', 
-            { headers: { Authorization: `Bearer ${SPOTIFY_ACCESS_TOKEN}` } }
-        );
-
-        const spotifySongs = response.data.tracks.items.map(song => ({
-            title: song.name,
-            album: song.album.name,
-            spotify_url: song.external_urls.spotify
-        }));
-
         const localSongs = readData();
 
         const enrichedLocalSongs = await Promise.all(localSongs.map(async (localSong) => {
@@ -71,17 +60,27 @@ app.get('//spotify-songs', async (req, res) => {
                     params: {
                         q: `${localSong.title} ${localSong.album} kendrick lamar`, // Include album and artist
                         type: 'track',
-                        limit: 1
+                        limit: 5 // Fetch multiple results
                     }
                 });
 
-                const track = spotifyRes.data.tracks.items[0];
+                // Validate the results to find the best match
+                const track = spotifyRes.data.tracks.items.find(item => 
+                    normalize(item.name) === normalize(localSong.title) &&
+                    normalize(item.album.name) === normalize(localSong.album)
+                ) || spotifyRes.data.tracks.items[0]; // Fallback to the first result
+
                 if (track) {
                     spotifyMatch = {
                         title: track.name,
                         album: track.album.name,
                         spotify_url: track.external_urls.spotify
                     };
+
+                    // Log potential mismatches
+                    if (normalize(track.name) !== normalize(localSong.title) || normalize(track.album.name) !== normalize(localSong.album)) {
+                        console.log(`Potential mismatch for "${localSong.title}": Matched "${track.name}" from album "${track.album.name}"`);
+                    }
                 }
             } catch (err) {
                 console.error(`Spotify API error for "${localSong.title}":`, err.message);
