@@ -16,7 +16,7 @@ function showSection(sectionName) {
 // Load and display songs
 async function loadSongs() {
     try {
-        const response = await fetch('//spotify-songs');
+        const response = await fetch('/node/spotify-songs');
         const data = await response.json();
         const container = document.getElementById('songs-container');
         container.innerHTML = '';
@@ -43,7 +43,7 @@ async function loadSongs() {
 // Load and display album stats
 async function loadAlbumStats(albumName) {
     try {
-        const response = await fetch(`//album-stats/${encodeURIComponent(albumName)}`);
+        const response = await fetch(`/node/album-stats/${encodeURIComponent(albumName)}`);
         const data = await response.json();
         const container = document.getElementById('album-stats-container');
         
@@ -83,7 +83,7 @@ async function loadAlbumStats(albumName) {
 // Load and display songs by year
 async function loadSongsByYear(year) {
     try {
-        const response = await fetch(`//songs/year/${year}`);
+        const response = await fetch(`/node/songs/year/${year}`);
         const data = await response.json();
         const container = document.getElementById('year-songs-container');
 
@@ -118,7 +118,7 @@ async function addSong(event) {
     const album = document.getElementById('album-name').value;
 
     try {
-        const response = await fetch('//playlist', {
+        const response = await fetch('/node/playlist', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
