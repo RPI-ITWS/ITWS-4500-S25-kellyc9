@@ -2,62 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Kendrick Lamar Discography</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Kendrick Lamar Songs</title>
+    <link rel="stylesheet" href="/node/styles.css">
 </head>
 <body>
-    <header>
-        <h1>Kendrick Lamar Discography</h1>
-        <nav>
-            <button onclick="showSection('songs')">All Songs</button>
-            <button onclick="showSection('album-stats')">Album Stats</button>
-            <button onclick="showSection('year-filter')">Filter by Year</button>
-            <button onclick="showSection('add-song')">Add Song</button>
-        </nav>
-    </header>
+    <h1>Kendrick Lamar Songs</h1>
 
-    <main>
-        <!-- Songs Section -->
-        <section id="songs-section" class="content-section">
-            <h2>Songs</h2>
-            <div id="songs-container" class="grid-container"></div>
-        </section>
-
-        <!-- Album Stats Section -->
-        <section id="album-stats-section" class="content-section" style="display: none;">
-            <h2>Album Statistics</h2>
-            <select id="album-select">
-                <option value="">Select an album...</option>
-            </select>
-            <div id="album-stats-container"></div>
-        </section>
-
-        <!-- Year Filter Section -->
-        <section id="year-filter-section" class="content-section" style="display: none;">
-            <h2>Songs by Year</h2>
-            <select id="year-select">
-                <option value="">Select a year...</option>
-            </select>
-            <div id="year-songs-container"></div>
-        </section>
-
-        <!-- Add Song Section -->
-        <section id="add-song-section" class="content-section" style="display: none;">
-            <h2>Add New Song</h2>
-            <form id="add-song-form">
-                <div>
-                    <label for="song-title">Song Title:</label>
-                    <input type="text" id="song-title" required>
-                </div>
-                <div>
-                    <label for="album-name">Album:</label>
-                    <input type="text" id="album-name" required>
-                </div>
-                <button type="submit">Add Song</button>
-            </form>
-        </section>
-    </main>
-
-    <script src="script.js"></script>
+    <h2>Songs</h2>
+    <ul id="songs-container"></ul>
+    <script src="/node/script.js"></script>
 </body>
 </html>
