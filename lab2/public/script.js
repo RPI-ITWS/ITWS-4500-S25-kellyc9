@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const songsContainer = document.getElementById('songs-container');
     const albumSongs = document.getElementById('album-songs');
-    const yearSongs = document.getElementById('year-songs');
 
     function loadSongs() {
         fetch('/node/spotify-songs')
@@ -34,17 +33,6 @@ document.addEventListener('DOMContentLoaded', () => {
             option.textContent = album;
             albumSelect.appendChild(option);
         });
-
-        // Populate year dropdown
-        const years = [...new Set(songs.map(song => song.release_year))];
-        const yearSelect = document.getElementById('year-select');
-        yearSelect.innerHTML = '<option value="">Select year...</option>';
-        years.forEach(year => {
-            const option = document.createElement('option');
-            option.value = year;
-            option.textContent = year;
-            yearSelect.appendChild(option);
-        });
     }
 
     document.getElementById('album-select').addEventListener('change', (e) => {
@@ -70,32 +58,6 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(error => {
                 console.error('Error:', error);
                 albumSongs.innerHTML = 'Error loading album songs';
-            });
-    });
-
-    document.getElementById('year-select').addEventListener('change', (e) => {
-        if (!e.target.value) {
-            yearSongs.innerHTML = '';
-            return;
-        }
-
-        fetch(`/node/songs/year/${e.target.value}`)
-            .then(response => response.json())
-            .then(data => {
-                yearSongs.innerHTML = '';
-                data.songs.forEach(song => {
-                    const li = document.createElement('li');
-                    li.innerHTML = `
-                        ${song.title} (${song.album})
-                        ${song.spotify_url ? `<a href="${song.spotify_url}" target="_blank">▶️</a>` : ''}
-                        ${song.genius_url ? `<a href="${song.genius_url}" target="_blank">Lyrics</a>` : ''}
-                    `;
-                    yearSongs.appendChild(li);
-                });
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                yearSongs.innerHTML = 'Error loading songs for year';
             });
     });
 
