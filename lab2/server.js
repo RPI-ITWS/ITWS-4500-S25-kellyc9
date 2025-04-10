@@ -408,7 +408,7 @@ app.get('//artist-songs', async (req, res) => {
     }
 });
 
-// Get similar tracks recommendation
+// Get similar tracks recommendation - FIXED VERSION
 app.get('//similar-tracks/:id', async (req, res) => {
     try {
         const songId = parseInt(req.params.id, 10);
@@ -416,79 +416,136 @@ app.get('//similar-tracks/:id', async (req, res) => {
         const song = songs.find(s => s.id === songId);
         
         if (!song) {
-            return res.status(404).json({ error: 'Song not found' });
+            return res.status(404).json({ error: 'Song not found in local database' });
         }
         
         // Get Spotify access token
         const token = await getSpotifyToken();
         
-        // Find the track on Spotify
-        const spotifyRes = await fetchSpotifyDataWithCache(`${song.title} ${song.album} kendrick lamar`, token);
-        const track = spotifyRes.find(item => 
-            normalize(item.name) === normalize(song.title) &&
-            normalize(item.album.name) === normalize(song.album)
-        ) || spotifyRes[0];
+        // Find the track on Spotify (use a more general search to increase chances of finding a match)
+        const spotifyRes = await fetchSpotifyDataWithCache(`${song.title} kendrick lamar`, token);
         
-        if (!track) {
-            return res.status(404).json({ error: 'Song not found on Spotify' });
+        if (!spotifyRes || spotifyRes.length === 0) {
+            return res.status(404).json({ 
+                error: 'No matching tracks found on Spotify',
+                song_title: song.title,
+                song_album: song.album
+            });
+        }
+        
+        const track = spotifyRes[0]; // Just use first result if nothing matches exactly
+        
+        if (!track || !track.id) {
+            return res.status(404).json({ 
+                error: 'No valid track found for the song on Spotify',
+                song_title: song.title,
+                song_album: song.album
+            });
         }
         
         // Get recommendations based on the track
-        const recsRes = await axios.get('https://api.spotify.com/v1/recommendations', {
-            headers: { Authorization: `Bearer ${token}` },
-            params: {
-                seed_tracks: track.id,
-                limit: 5
-            }
-        });
-        
-        // Get Genius data for each recommended track
-        const recommendedTracks = await Promise.all(recsRes.data.tracks.map(async (recTrack) => {
-            let geniusData = null;
-            try {
-                const geniusRes = await axios.get(`https://api.genius.com/search?q=${encodeURIComponent(recTrack.name)}`, {
-                    headers: { Authorization: `Bearer ${GENIUS_ACCESS_TOKEN}` }
+        try {
+            const recsRes = await axios.get('https://api.spotify.com/v1/recommendations', {
+                headers: { Authorization: `Bearer ${token}` },
+                params: {
+                    seed_tracks: track.id,
+                    limit: 5
+                }
+            });
+            
+            if (!recsRes.data.tracks || !recsRes.data.tracks.length) {
+                return res.json({
+                    source_track: {
+                        id: song.id,
+                        title: song.title,
+                        album: song.album,
+                        release_year: song.release_year,
+                        spotify_track_used: {
+                            name: track.name,
+                            id: track.id,
+                            spotify_url: track.external_urls.spotify
+                        }
+                    },
+                    similar_tracks: [],
+                    message: "No similar tracks found"
                 });
-                geniusData = geniusRes.data.response.hits[0]?.result;
-            } catch (e) {
-                console.error(`Genius API error for "${recTrack.name}":`, e.message);
             }
             
-            // Check if this recommended track exists in our local database
-            const localMatch = songs.find(s => 
-                normalize(s.title) === normalize(recTrack.name) &&
-                normalize(s.album) === normalize(recTrack.album.name)
-            );
+            // Get Genius data for each recommended track
+            const recommendedTracks = await Promise.all(recsRes.data.tracks.map(async (recTrack) => {
+                let geniusData = null;
+                try {
+                    const geniusRes = await axios.get(`https://api.genius.com/search?q=${encodeURIComponent(recTrack.name)}`, {
+                        headers: { Authorization: `Bearer ${GENIUS_ACCESS_TOKEN}` }
+                    });
+                    geniusData = geniusRes.data.response.hits[0]?.result;
+                } catch (e) {
+                    console.error(`Genius API error for "${recTrack.name}":`, e.message);
+                }
+                
+                // Check if this recommended track exists in our local database
+                const localMatch = songs.find(s => 
+                    normalize(s.title) === normalize(recTrack.name) &&
+                    normalize(s.album) === normalize(recTrack.album.name)
+                );
+                
+                return {
+                    name: recTrack.name,
+                    artists: recTrack.artists.map(a => a.name).join(', '),
+                    album: recTrack.album.name,
+                    spotify_url: recTrack.external_urls.spotify,
+                    preview_url: recTrack.preview_url,
+                    image: recTrack.album.images[0]?.url,
+                    genius_url: geniusData?.url,
+                    in_local_database: !!localMatch,
+                    local_id: localMatch?.id
+                };
+            }));
             
-            return {
-                name: recTrack.name,
-                artists: recTrack.artists.map(a => a.name).join(', '),
-                album: recTrack.album.name,
-                spotify_url: recTrack.external_urls.spotify,
-                preview_url: recTrack.preview_url,
-                image: recTrack.album.images[0]?.url,
-                genius_url: geniusData?.url,
-                in_local_database: !!localMatch,
-                local_id: localMatch?.id
+            // Combine all the data
+            const result = {
+                source_track: {
+                    id: song.id,
+                    title: song.title,
+                    album: song.album,
+                    release_year: song.release_year,
+                    spotify_track_used: {
+                        name: track.name,
+                        id: track.id,
+                        spotify_url: track.external_urls.spotify
+                    }
+                },
+                similar_tracks: recommendedTracks
             };
-        }));
-        
-        // Combine all the data
-        const result = {
-            source_track: {
-                id: song.id,
-                title: song.title,
-                album: song.album,
-                release_year: song.release_year,
-                spotify_url: track.external_urls.spotify
-            },
-            similar_tracks: recommendedTracks
-        };
-        
-        res.json(result);
+            
+            res.json(result);
+        } catch (recommendationError) {
+            console.error(`Error getting recommendations:`, recommendationError.message);
+            
+            // If the recommendations call fails, we can still return some useful data
+            res.status(500).json({
+                error: 'Failed to get recommendations from Spotify',
+                details: recommendationError.message,
+                source_track: {
+                    id: song.id,
+                    title: song.title,
+                    album: song.album,
+                    release_year: song.release_year
+                },
+                spotify_track_found: track ? {
+                    name: track.name,
+                    album: track.album.name,
+                    id: track.id
+                } : null,
+                similar_tracks: [] // Empty because recommendations failed
+            });
+        }
     } catch (error) {
         console.error('Error fetching similar tracks:', error.message);
-        res.status(500).json({ error: 'Failed to fetch similar tracks', details: error.message });
+        res.status(500).json({ 
+            error: 'Failed to fetch similar tracks', 
+            details: error.message
+        });
     }
 });
 
