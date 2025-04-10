@@ -131,7 +131,6 @@ app.get('//spotify-songs', async (req, res) => {
     }
 });
 
-// Get Genius Lyrics for a Song
 app.get('//lyrics/:song', async (req, res) => {
     try {
         const song = req.params.song;
@@ -149,6 +148,69 @@ app.get('//lyrics/:song', async (req, res) => {
     }
 });
 
-// Start the Server
+app.get('//album-stats/:albumName', async (req, res) => {
+    try {
+        const token = await getSpotifyToken();
+        const songs = readData().filter(song => 
+            normalize(song.album) === normalize(req.params.albumName)
+        );
+        
+        if (!songs.length) return res.status(404).json({ error: 'Album not found' });
+        
+        const enrichedSongs = await Promise.all(songs.map(async song => {
+            const spotifyRes = await fetchSpotifyDataWithCache(`${song.title} ${song.album} kendrick lamar`, token);
+            const geniusRes = await axios.get(`https://api.genius.com/search?q=${encodeURIComponent(song.title)}`, {
+                headers: { Authorization: `Bearer ${GENIUS_ACCESS_TOKEN}` }
+            });
+            
+            return {
+                title: song.title,
+                track_number: song.track_number,
+                spotify_url: spotifyRes[0]?.external_urls?.spotify,
+                genius_url: geniusRes.data.response.hits[0]?.result?.url
+            };
+        }));
+
+        res.json({
+            name: req.params.albumName,
+            tracks: enrichedSongs,
+            year: songs[0].release_year,
+            trackCount: songs.length
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch album stats' });
+    }
+});
+
+app.get('//songs/year/:year', async (req, res) => {
+    try {
+        const year = parseInt(req.params.year);
+        const songs = readData().filter(song => song.release_year === year);
+        const token = await getSpotifyToken();
+        
+        const enrichedSongs = await Promise.all(songs.map(async song => {
+            const spotifyRes = await fetchSpotifyDataWithCache(`${song.title} ${song.album} kendrick lamar`, token);
+            const geniusRes = await axios.get(`https://api.genius.com/search?q=${encodeURIComponent(song.title)}`, {
+                headers: { Authorization: `Bearer ${GENIUS_ACCESS_TOKEN}` }
+            });
+            
+            return {
+                title: song.title,
+                album: song.album,
+                spotify_url: spotifyRes[0]?.external_urls?.spotify,
+                genius_url: geniusRes.data.response.hits[0]?.result?.url
+            };
+        }));
+
+        res.json({ 
+            year,
+            songs: enrichedSongs,
+            count: enrichedSongs.length
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch songs by year' });
+    }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
