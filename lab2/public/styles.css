@@ -1,3 +1,4 @@
+/* General styles */
 body {
     font-family: Arial, sans-serif;
     max-width: 800px;
@@ -24,7 +25,8 @@ body {
     list-style-type: none;
     padding: 0;
     gap: 15px;
-    margin-bottom: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
 }
 
 .api-nav a {
@@ -32,6 +34,7 @@ body {
     text-decoration: none;
     padding: 3px 8px;
     border-radius: 3px;
+    margin-left: 0;
 }
 
 .api-nav a:hover {
@@ -39,9 +42,24 @@ body {
     text-decoration: underline;
 }
 
-#api-album-select {
-    padding: 5px;
-    margin-bottom: 0;
+#api-selectors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.api-select-group {
+    margin-bottom: 10px;
+}
+
+.api-select-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.9em;
+}
+
+.api-select-group select {
+    width: 200px;
 }
 
 /* Content Navigation */
@@ -57,6 +75,7 @@ body {
     padding: 0;
     display: flex;
     gap: 15px;
+    margin: 0;
 }
 
 .content-nav li a {
@@ -66,12 +85,14 @@ body {
     padding: 5px 10px;
     border-radius: 3px;
     transition: background-color 0.2s;
+    margin-left: 0;
 }
 
 .content-nav li a:hover {
     background-color: #ddd;
 }
 
+/* Content sections */
 .section {
     margin-bottom: 30px;
     padding: 15px;
@@ -79,6 +100,7 @@ body {
     border-radius: 5px;
 }
 
+/* Forms */
 form {
     display: flex;
     flex-direction: column;
@@ -127,6 +149,7 @@ button.edit-btn:hover {
     background-color: #0b7dda;
 }
 
+/* Lists and links */
 ul {
     padding-left: 20px;
 }

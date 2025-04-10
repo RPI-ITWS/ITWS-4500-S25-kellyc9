@@ -1,13 +1,19 @@
 document.addEventListener('DOMContentLoaded', () => {
     const songsContainer = document.getElementById('songs-container');
     const albumSelect = document.getElementById('album-select');
-    const apiAlbumSelect = document.getElementById('api-album-select');
-    const albumApiLink = document.getElementById('album-api-link');
     const albumSongs = document.getElementById('album-songs');
     const addSongForm = document.getElementById('add-song-form');
     const updateSongForm = document.getElementById('update-song-form');
     const deleteButton = document.getElementById('delete-button');
     const cancelEditButton = document.getElementById('cancel-edit');
+    
+    // API selector elements
+    const trackSelect = document.getElementById('track-select');
+    const similarTrackSelect = document.getElementById('similar-track-select');
+    
+    // API link elements
+    const trackDetailsLink = document.getElementById('track-details-link');
+    const similarTracksLink = document.getElementById('similar-tracks-link');
     
     // Add smooth scrolling for navigation links
     document.querySelectorAll('.content-nav a').forEach(link => {
@@ -39,25 +45,32 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Group songs by album for the dropdown
             const albums = [...new Set(songs.map(song => song.album))];
-            
-            // Update both album dropdowns
             albumSelect.innerHTML = '<option value="">Select album...</option>';
-            apiAlbumSelect.innerHTML = '<option value="">Select an album for API...</option>';
             
             albums.forEach(album => {
-                const option1 = document.createElement('option');
-                option1.value = album;
-                option1.textContent = album;
-                albumSelect.appendChild(option1);
-                
-                const option2 = document.createElement('option');
-                option2.value = album;
-                option2.textContent = album;
-                apiAlbumSelect.appendChild(option2);
+                const option = document.createElement('option');
+                option.value = album;
+                option.textContent = album;
+                albumSelect.appendChild(option);
             });
             
-            // Display all songs
+            // Update track selectors
+            trackSelect.innerHTML = '<option value="">Select a track...</option>';
+            similarTrackSelect.innerHTML = '<option value="">Select a track...</option>';
+            
             songs.forEach(song => {
+                // Add to track selectors for API navigation
+                const trackOption = document.createElement('option');
+                trackOption.value = song.title;
+                trackOption.textContent = `${song.title} (${song.album})`;
+                trackSelect.appendChild(trackOption);
+                
+                const similarOption = document.createElement('option');
+                similarOption.value = song.id;
+                similarOption.textContent = `${song.title} (${song.album})`;
+                similarTrackSelect.appendChild(similarOption);
+                
+                // Display in songs list
                 const songItem = document.createElement('li');
                 songItem.innerHTML = `
                     <strong>${song.title}</strong> (${song.album}, ${song.release_year}, Track ${song.track_number})
@@ -83,16 +96,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // Handle API album selection for direct link
-    apiAlbumSelect.addEventListener('change', () => {
-        const selectedAlbum = apiAlbumSelect.value;
-        if (selectedAlbum) {
-            albumApiLink.href = `/node/album-stats/${encodeURIComponent(selectedAlbum)}`;
-            albumApiLink.setAttribute('target', '_blank');
+    // Handle API selector events
+    trackSelect.addEventListener('change', () => {
+        const selectedTrack = trackSelect.value;
+        if (selectedTrack) {
+            trackDetailsLink.href = `/node/track-details/${encodeURIComponent(selectedTrack)}`;
+            trackDetailsLink.setAttribute('target', '_blank');
         } else {
-            albumApiLink.href = '#';
-            albumApiLink.removeAttribute('target');
+            trackDetailsLink.href = '#';
+            trackDetailsLink.removeAttribute('target');
         }
+    });
+    
+    similarTrackSelect.addEventListener('change', () => {
+        const selectedTrack = similarTrackSelect.value;
+        if (selectedTrack) {
+            similarTracksLink.href = `/node/similar-tracks/${selectedTrack}`;
+            similarTracksLink.setAttribute('target', '_blank');
+        } else {
+            similarTracksLink.href = '#';
+            similarTracksLink.removeAttribute('target');
+        }
+    });
+    
+    // Prevent API link clicks when no selection is made
+    document.querySelectorAll('.api-nav a').forEach(link => {
+        link.addEventListener('click', (e) => {
+            if (link.getAttribute('href') === '#') {
+                e.preventDefault();
+                alert('Please make a selection first');
+            }
+        });
     });
     
     // Handle album selection for display
@@ -244,14 +278,6 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Failed to delete song due to a network error.');
         }
     };
-    
-    // Prevent form submission when clicking album API link if no album selected
-    albumApiLink.addEventListener('click', (e) => {
-        if (albumApiLink.getAttribute('href') === '#') {
-            e.preventDefault();
-            alert('Please select an album from the dropdown first');
-        }
-    });
     
     // Initial load
     loadSongsWithLinks();

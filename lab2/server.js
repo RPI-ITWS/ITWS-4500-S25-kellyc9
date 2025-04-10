@@ -83,13 +83,7 @@ const fetchSpotifyDataWithCache = async (query, token) => {
 // Get a list of all songs (basic)
 app.get('//songs', (req, res) => {
     const songs = readData();
-    res.json(songs.map(song => ({
-        id: song.id,
-        title: song.title,
-        album: song.album,
-        release_year: song.release_year,
-        track_number: song.track_number
-    })));
+    res.json(songs);
 });
 
 // Get a specific song by ID
@@ -233,6 +227,7 @@ app.delete('//songs/:id', (req, res) => {
     }
 });
 
+// Get songs with Spotify and Genius data
 app.get('//spotify-songs', async (req, res) => {
     try {
         const SPOTIFY_ACCESS_TOKEN = await getSpotifyToken();
@@ -285,23 +280,219 @@ app.get('//spotify-songs', async (req, res) => {
     }
 });
 
-app.get('//lyrics/:song', async (req, res) => {
+// Get track details with data from multiple sources
+app.get('//track-details/:title', async (req, res) => {
     try {
-        const song = req.params.song;
-        const response = await axios.get(`https://api.genius.com/search?q=${encodeURIComponent(song)}`, {
+        const title = req.params.title;
+        const songs = readData();
+        const localSong = songs.find(song => normalize(song.title) === normalize(title));
+        
+        if (!localSong) {
+            return res.status(404).json({ error: 'Track not found in local database' });
+        }
+        
+        // Get Spotify data
+        const token = await getSpotifyToken();
+        const spotifyRes = await fetchSpotifyDataWithCache(`${localSong.title} ${localSong.album} kendrick lamar`, token);
+        const track = spotifyRes.find(item => 
+            normalize(item.name) === normalize(localSong.title)
+        ) || spotifyRes[0];
+        
+        // Get Genius data
+        const geniusRes = await axios.get(`https://api.genius.com/search?q=${encodeURIComponent(localSong.title)}`, {
             headers: { Authorization: `Bearer ${GENIUS_ACCESS_TOKEN}` }
         });
-
-        const songUrl = response.data.response.hits[0]?.result.url;
-        if (!songUrl) return res.status(404).json({ error: "Lyrics not found" });
-
-        res.json({ song, lyrics_url: songUrl });
+        const geniusHit = geniusRes.data.response.hits[0]?.result;
+        
+        // Combine the data
+        const trackDetails = {
+            local: {
+                id: localSong.id,
+                title: localSong.title,
+                album: localSong.album,
+                release_year: localSong.release_year,
+                track_number: localSong.track_number
+            },
+            spotify: track ? {
+                name: track.name,
+                album: track.album.name,
+                popularity: track.popularity,
+                duration_ms: track.duration_ms,
+                explicit: track.explicit,
+                artists: track.artists.map(artist => ({
+                    name: artist.name,
+                    spotify_url: artist.external_urls.spotify
+                })),
+                preview_url: track.preview_url,
+                spotify_url: track.external_urls.spotify,
+                album_art: track.album.images[0]?.url
+            } : null,
+            genius: geniusHit ? {
+                title: geniusHit.title,
+                primary_artist: geniusHit.primary_artist.name,
+                url: geniusHit.url,
+                thumbnail: geniusHit.header_image_thumbnail_url
+            } : null
+        };
+        
+        res.json(trackDetails);
     } catch (error) {
-        console.error(`Error fetching lyrics for "${req.params.song}":`, error.message);
-        res.status(500).json({ error: 'Failed to fetch lyrics', details: error.message });
+        console.error('Error fetching track details:', error.message);
+        res.status(500).json({ error: 'Failed to fetch track details', details: error.message });
     }
 });
 
+// Get artist information with songs
+app.get('//artist-songs', async (req, res) => {
+    try {
+        const token = await getSpotifyToken();
+        
+        // Get artist info from Spotify
+        const artistRes = await axios.get('https://api.spotify.com/v1/search', {
+            headers: { Authorization: `Bearer ${token}` },
+            params: {
+                q: 'kendrick lamar',
+                type: 'artist',
+                limit: 1
+            }
+        });
+        
+        const artist = artistRes.data.artists.items[0];
+        if (!artist) {
+            return res.status(404).json({ error: 'Artist not found on Spotify' });
+        }
+        
+        // Get local songs
+        const localSongs = readData();
+        
+        // Get top tracks for the artist from Spotify
+        const topTracksRes = await axios.get(`https://api.spotify.com/v1/artists/${artist.id}/top-tracks?market=US`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        // Combine the data
+        const result = {
+            artist: {
+                name: artist.name,
+                spotify_url: artist.external_urls.spotify,
+                genres: artist.genres,
+                popularity: artist.popularity,
+                image: artist.images[0]?.url
+            },
+            top_tracks: topTracksRes.data.tracks.map(track => ({
+                name: track.name,
+                album: track.album.name,
+                release_date: track.album.release_date,
+                spotify_url: track.external_urls.spotify,
+                preview_url: track.preview_url,
+                image: track.album.images[0]?.url,
+                // Check if this track exists in our local database
+                in_local_database: localSongs.some(song => 
+                    normalize(song.title) === normalize(track.name) &&
+                    normalize(song.album) === normalize(track.album.name)
+                )
+            })),
+            local_songs: localSongs.map(song => ({
+                id: song.id,
+                title: song.title,
+                album: song.album,
+                release_year: song.release_year,
+                track_number: song.track_number
+            }))
+        };
+        
+        res.json(result);
+    } catch (error) {
+        console.error('Error fetching artist songs:', error.message);
+        res.status(500).json({ error: 'Failed to fetch artist songs', details: error.message });
+    }
+});
+
+// Get similar tracks recommendation
+app.get('//similar-tracks/:id', async (req, res) => {
+    try {
+        const songId = parseInt(req.params.id, 10);
+        const songs = readData();
+        const song = songs.find(s => s.id === songId);
+        
+        if (!song) {
+            return res.status(404).json({ error: 'Song not found' });
+        }
+        
+        // Get Spotify access token
+        const token = await getSpotifyToken();
+        
+        // Find the track on Spotify
+        const spotifyRes = await fetchSpotifyDataWithCache(`${song.title} ${song.album} kendrick lamar`, token);
+        const track = spotifyRes.find(item => 
+            normalize(item.name) === normalize(song.title) &&
+            normalize(item.album.name) === normalize(song.album)
+        ) || spotifyRes[0];
+        
+        if (!track) {
+            return res.status(404).json({ error: 'Song not found on Spotify' });
+        }
+        
+        // Get recommendations based on the track
+        const recsRes = await axios.get('https://api.spotify.com/v1/recommendations', {
+            headers: { Authorization: `Bearer ${token}` },
+            params: {
+                seed_tracks: track.id,
+                limit: 5
+            }
+        });
+        
+        // Get Genius data for each recommended track
+        const recommendedTracks = await Promise.all(recsRes.data.tracks.map(async (recTrack) => {
+            let geniusData = null;
+            try {
+                const geniusRes = await axios.get(`https://api.genius.com/search?q=${encodeURIComponent(recTrack.name)}`, {
+                    headers: { Authorization: `Bearer ${GENIUS_ACCESS_TOKEN}` }
+                });
+                geniusData = geniusRes.data.response.hits[0]?.result;
+            } catch (e) {
+                console.error(`Genius API error for "${recTrack.name}":`, e.message);
+            }
+            
+            // Check if this recommended track exists in our local database
+            const localMatch = songs.find(s => 
+                normalize(s.title) === normalize(recTrack.name) &&
+                normalize(s.album) === normalize(recTrack.album.name)
+            );
+            
+            return {
+                name: recTrack.name,
+                artists: recTrack.artists.map(a => a.name).join(', '),
+                album: recTrack.album.name,
+                spotify_url: recTrack.external_urls.spotify,
+                preview_url: recTrack.preview_url,
+                image: recTrack.album.images[0]?.url,
+                genius_url: geniusData?.url,
+                in_local_database: !!localMatch,
+                local_id: localMatch?.id
+            };
+        }));
+        
+        // Combine all the data
+        const result = {
+            source_track: {
+                id: song.id,
+                title: song.title,
+                album: song.album,
+                release_year: song.release_year,
+                spotify_url: track.external_urls.spotify
+            },
+            similar_tracks: recommendedTracks
+        };
+        
+        res.json(result);
+    } catch (error) {
+        console.error('Error fetching similar tracks:', error.message);
+        res.status(500).json({ error: 'Failed to fetch similar tracks', details: error.message });
+    }
+});
+
+// Get album stats with enhanced info
 app.get('//album-stats/:albumName', async (req, res) => {
     try {
         const token = await getSpotifyToken();
@@ -333,6 +524,24 @@ app.get('//album-stats/:albumName', async (req, res) => {
         });
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch album stats' });
+    }
+});
+
+// Get lyrics info for a song
+app.get('//lyrics/:song', async (req, res) => {
+    try {
+        const song = req.params.song;
+        const response = await axios.get(`https://api.genius.com/search?q=${encodeURIComponent(song)}`, {
+            headers: { Authorization: `Bearer ${GENIUS_ACCESS_TOKEN}` }
+        });
+
+        const songUrl = response.data.response.hits[0]?.result.url;
+        if (!songUrl) return res.status(404).json({ error: "Lyrics not found" });
+
+        res.json({ song, lyrics_url: songUrl });
+    } catch (error) {
+        console.error(`Error fetching lyrics for "${req.params.song}":`, error.message);
+        res.status(500).json({ error: 'Failed to fetch lyrics', details: error.message });
     }
 });
 
