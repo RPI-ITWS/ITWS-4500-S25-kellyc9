@@ -9,6 +9,7 @@ app.use(express.static('public'));
 
 const dataPath = path.join(__dirname, 'data.json');
 const readData = () => JSON.parse(fs.readFileSync(dataPath));
+const writeData = (data) => fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
 
 // Spotify API Credentials
 const SPOTIFY_CLIENT_ID = "abaf98e3885e4b1780ac4f249b9c603c";
@@ -78,6 +79,159 @@ const fetchSpotifyDataWithCache = async (query, token) => {
     spotifyCache.set(query, results);
     return results;
 };
+
+// Get a list of all songs (basic)
+app.get('//songs', (req, res) => {
+    const songs = readData();
+    res.json(songs.map(song => ({
+        id: song.id,
+        title: song.title,
+        album: song.album,
+        release_year: song.release_year,
+        track_number: song.track_number
+    })));
+});
+
+// Get a specific song by ID
+app.get('//songs/:id', (req, res) => {
+    const songId = parseInt(req.params.id, 10);
+    const songs = readData();
+    const song = songs.find(song => song.id === songId);
+    
+    if (song) {
+        res.json(song);
+    } else {
+        res.status(404).send('Song not found');
+    }
+});
+
+// Add a new song
+app.post('//songs', async (req, res) => {
+    try {
+        const newSong = req.body;
+        const songs = readData();
+
+        // Ensure unique IDs
+        newSong.id = songs.length ? Math.max(...songs.map(song => song.id)) + 1 : 1;
+        
+        songs.push(newSong);
+        writeData(songs);
+        
+        // Enrich the new song with Spotify and Genius data
+        const token = await getSpotifyToken();
+        let spotifyMatch = null;
+        
+        try {
+            const spotifyRes = await fetchSpotifyDataWithCache(`${newSong.title} ${newSong.album} kendrick lamar`, token);
+            const track = spotifyRes.find(item => 
+                normalize(item.name) === normalize(newSong.title) &&
+                normalize(item.album.name) === normalize(newSong.album)
+            ) || spotifyRes[0];
+
+            if (track) {
+                spotifyMatch = {
+                    spotify_url: track.external_urls.spotify
+                };
+            }
+        } catch (err) {
+            console.error(`Spotify API error for "${newSong.title}":`, err.message);
+        }
+        
+        let geniusUrl = null;
+        try {
+            const geniusRes = await axios.get(`https://api.genius.com/search?q=${encodeURIComponent(newSong.title)}`, {
+                headers: { Authorization: `Bearer ${GENIUS_ACCESS_TOKEN}` }
+            });
+            geniusUrl = geniusRes.data.response.hits[0]?.result.url || null;
+        } catch (e) {
+            console.error(`Genius API error for "${newSong.title}":`, e.message);
+        }
+        
+        const enrichedNewSong = {
+            ...newSong,
+            spotify_url: spotifyMatch ? spotifyMatch.spotify_url : null,
+            genius_url: geniusUrl
+        };
+        
+        res.status(201).json(enrichedNewSong);
+    } catch (error) {
+        console.error('Error adding new song:', error.message);
+        res.status(500).json({ error: 'Failed to add song', details: error.message });
+    }
+});
+
+// Update a specific song by ID
+app.put('//songs/:id', async (req, res) => {
+    try {
+        const songId = parseInt(req.params.id, 10);
+        const songs = readData();
+        const songIndex = songs.findIndex(song => song.id === songId);
+
+        if (songIndex !== -1) {
+            const updatedSong = { ...songs[songIndex], ...req.body };
+            songs[songIndex] = updatedSong;
+            writeData(songs);
+            
+            // Enrich the updated song with Spotify and Genius data
+            const token = await getSpotifyToken();
+            let spotifyMatch = null;
+            
+            try {
+                const spotifyRes = await fetchSpotifyDataWithCache(`${updatedSong.title} ${updatedSong.album} kendrick lamar`, token);
+                const track = spotifyRes.find(item => 
+                    normalize(item.name) === normalize(updatedSong.title) &&
+                    normalize(item.album.name) === normalize(updatedSong.album)
+                ) || spotifyRes[0];
+
+                if (track) {
+                    spotifyMatch = {
+                        spotify_url: track.external_urls.spotify
+                    };
+                }
+            } catch (err) {
+                console.error(`Spotify API error for "${updatedSong.title}":`, err.message);
+            }
+            
+            let geniusUrl = null;
+            try {
+                const geniusRes = await axios.get(`https://api.genius.com/search?q=${encodeURIComponent(updatedSong.title)}`, {
+                    headers: { Authorization: `Bearer ${GENIUS_ACCESS_TOKEN}` }
+                });
+                geniusUrl = geniusRes.data.response.hits[0]?.result.url || null;
+            } catch (e) {
+                console.error(`Genius API error for "${updatedSong.title}":`, e.message);
+            }
+            
+            const enrichedUpdatedSong = {
+                ...updatedSong,
+                spotify_url: spotifyMatch ? spotifyMatch.spotify_url : null,
+                genius_url: geniusUrl
+            };
+            
+            res.json(enrichedUpdatedSong);
+        } else {
+            res.status(404).send('Song not found');
+        }
+    } catch (error) {
+        console.error('Error updating song:', error.message);
+        res.status(500).json({ error: 'Failed to update song', details: error.message });
+    }
+});
+
+// Delete a song by ID
+app.delete('//songs/:id', (req, res) => {
+    const songId = parseInt(req.params.id, 10);
+    const songs = readData();
+    const songIndex = songs.findIndex(song => song.id === songId);
+
+    if (songIndex !== -1) {
+        songs.splice(songIndex, 1);
+        writeData(songs);
+        res.status(200).send('Song deleted');
+    } else {
+        res.status(404).send('Song not found');
+    }
+});
 
 app.get('//spotify-songs', async (req, res) => {
     try {
