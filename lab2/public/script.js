@@ -9,11 +9,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // API selector elements
     const trackSelect = document.getElementById('track-select');
-    const similarTrackSelect = document.getElementById('similar-track-select');
+    const audioFeaturesSelect = document.getElementById('audio-features-select');
     
     // API link elements
     const trackDetailsLink = document.getElementById('track-details-link');
-    const similarTracksLink = document.getElementById('similar-tracks-link');
+    const audioFeaturesLink = document.getElementById('audio-features-link');
     
     // Add smooth scrolling for navigation links
     document.querySelectorAll('.content-nav a').forEach(link => {
@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Update track selectors
             trackSelect.innerHTML = '<option value="">Select a track...</option>';
-            similarTrackSelect.innerHTML = '<option value="">Select a track...</option>';
+            audioFeaturesSelect.innerHTML = '<option value="">Select a track...</option>';
             
             songs.forEach(song => {
                 // Add to track selectors for API navigation
@@ -65,10 +65,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 trackOption.textContent = `${song.title} (${song.album})`;
                 trackSelect.appendChild(trackOption);
                 
-                const similarOption = document.createElement('option');
-                similarOption.value = song.id;
-                similarOption.textContent = `${song.title} (${song.album})`;
-                similarTrackSelect.appendChild(similarOption);
+                const audioOption = document.createElement('option');
+                audioOption.value = song.id;
+                audioOption.textContent = `${song.title} (${song.album})`;
+                audioFeaturesSelect.appendChild(audioOption);
                 
                 // Display in songs list
                 const songItem = document.createElement('li');
@@ -108,14 +108,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    similarTrackSelect.addEventListener('change', () => {
-        const selectedTrack = similarTrackSelect.value;
+    audioFeaturesSelect.addEventListener('change', () => {
+        const selectedTrack = audioFeaturesSelect.value;
         if (selectedTrack) {
-            similarTracksLink.href = `/node/similar-tracks/${selectedTrack}`;
-            similarTracksLink.setAttribute('target', '_blank');
+            audioFeaturesLink.href = `/node/song-audio-features/${selectedTrack}`;
+            audioFeaturesLink.setAttribute('target', '_blank');
         } else {
-            similarTracksLink.href = '#';
-            similarTracksLink.removeAttribute('target');
+            audioFeaturesLink.href = '#';
+            audioFeaturesLink.removeAttribute('target');
         }
     });
     
