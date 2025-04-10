@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const songsContainer = document.getElementById('songs-container');
     const albumSelect = document.getElementById('album-select');
+    const albumInfoSelect = document.getElementById('album-info-select');
     const albumSongs = document.getElementById('album-songs');
     const addSongForm = document.getElementById('add-song-form');
     const updateSongForm = document.getElementById('update-song-form');
@@ -9,11 +10,13 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // API selector elements
     const trackSelect = document.getElementById('track-select');
-    const audioFeaturesSelect = document.getElementById('audio-features-select');
+    const searchInput = document.getElementById('search-input');
+    const searchButton = document.getElementById('search-button');
     
     // API link elements
     const trackDetailsLink = document.getElementById('track-details-link');
-    const audioFeaturesLink = document.getElementById('audio-features-link');
+    const albumInfoLink = document.getElementById('album-info-link');
+    const searchLink = document.getElementById('search-link');
     
     // Add smooth scrolling for navigation links
     document.querySelectorAll('.content-nav a').forEach(link => {
@@ -43,32 +46,34 @@ document.addEventListener('DOMContentLoaded', () => {
             // Sort songs by album
             songs.sort((a, b) => a.album.localeCompare(b.album));
             
-            // Group songs by album for the dropdown
+            // Group songs by album for the dropdowns
             const albums = [...new Set(songs.map(song => song.album))];
+            
+            // Update album selectors
             albumSelect.innerHTML = '<option value="">Select album...</option>';
+            albumInfoSelect.innerHTML = '<option value="">Select an album...</option>';
             
             albums.forEach(album => {
-                const option = document.createElement('option');
-                option.value = album;
-                option.textContent = album;
-                albumSelect.appendChild(option);
+                const option1 = document.createElement('option');
+                option1.value = album;
+                option1.textContent = album;
+                albumSelect.appendChild(option1);
+                
+                const option2 = document.createElement('option');
+                option2.value = album;
+                option2.textContent = album;
+                albumInfoSelect.appendChild(option2);
             });
             
-            // Update track selectors
+            // Update track selector
             trackSelect.innerHTML = '<option value="">Select a track...</option>';
-            audioFeaturesSelect.innerHTML = '<option value="">Select a track...</option>';
             
             songs.forEach(song => {
-                // Add to track selectors for API navigation
+                // Add to track selector for API navigation
                 const trackOption = document.createElement('option');
                 trackOption.value = song.title;
                 trackOption.textContent = `${song.title} (${song.album})`;
                 trackSelect.appendChild(trackOption);
-                
-                const audioOption = document.createElement('option');
-                audioOption.value = song.id;
-                audioOption.textContent = `${song.title} (${song.album})`;
-                audioFeaturesSelect.appendChild(audioOption);
                 
                 // Display in songs list
                 const songItem = document.createElement('li');
@@ -108,14 +113,33 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    audioFeaturesSelect.addEventListener('change', () => {
-        const selectedTrack = audioFeaturesSelect.value;
-        if (selectedTrack) {
-            audioFeaturesLink.href = `/node/song-audio-features/${selectedTrack}`;
-            audioFeaturesLink.setAttribute('target', '_blank');
+    albumInfoSelect.addEventListener('change', () => {
+        const selectedAlbum = albumInfoSelect.value;
+        if (selectedAlbum) {
+            albumInfoLink.href = `/node/album-info/${encodeURIComponent(selectedAlbum)}`;
+            albumInfoLink.setAttribute('target', '_blank');
         } else {
-            audioFeaturesLink.href = '#';
-            audioFeaturesLink.removeAttribute('target');
+            albumInfoLink.href = '#';
+            albumInfoLink.removeAttribute('target');
+        }
+    });
+    
+    // Handle search functionality
+    searchButton.addEventListener('click', () => {
+        const query = searchInput.value.trim();
+        if (query) {
+            searchLink.href = `/node/search/${encodeURIComponent(query)}`;
+            searchLink.setAttribute('target', '_blank');
+            window.open(searchLink.href, '_blank');
+        } else {
+            alert('Please enter a search term');
+        }
+    });
+    
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            searchButton.click();
         }
     });
     

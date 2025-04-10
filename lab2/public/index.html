@@ -15,7 +15,8 @@
             <li><a href="/node/spotify-songs" target="_blank">Songs with Spotify Data</a></li>
             <li><a href="/node/artist-songs" target="_blank">Artist with Top Songs</a></li>
             <li><a href="#" id="track-details-link">Track Details</a></li>
-            <li><a href="#" id="audio-features-link">Audio Features</a></li>
+            <li><a href="#" id="album-info-link">Album Info</a></li>
+            <li><a href="#" id="search-link">Search</a></li>
         </ul>
         
         <div id="api-selectors">
@@ -27,12 +28,19 @@
                 </select>
             </div>
             
-            <!-- Audio Features Selector -->
+            <!-- Album Info Selector -->
             <div class="api-select-group">
-                <label for="audio-features-select">Select track for audio features:</label>
-                <select id="audio-features-select">
-                    <option value="">Select a track...</option>
+                <label for="album-info-select">Select album for info:</label>
+                <select id="album-info-select">
+                    <option value="">Select an album...</option>
                 </select>
+            </div>
+            
+            <!-- Search Input -->
+            <div class="api-select-group">
+                <label for="search-input">Search term:</label>
+                <input type="text" id="search-input" placeholder="Enter search term...">
+                <button id="search-button">Search</button>
             </div>
         </div>
     </div>
