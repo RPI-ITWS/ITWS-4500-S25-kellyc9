@@ -8,7 +8,19 @@
 <body>
     <h1>Kendrick Lamar Songs</h1>
 
-    <div class="nav-menu">
+    <div class="api-nav">
+        <h3>API Navigation</h3>
+        <ul>
+            <li><a href="/node/songs" target="_blank">Raw Songs Data</a></li>
+            <li><a href="/node/spotify-songs" target="_blank">Songs with Spotify Data</a></li>
+            <li><a href="#" id="album-api-link">Album Stats (Select below)</a></li>
+        </ul>
+        <select id="api-album-select">
+            <option value="">Select an album for API...</option>
+        </select>
+    </div>
+
+    <div class="content-nav">
         <ul>
             <li><a href="#songs-section">All Songs</a></li>
             <li><a href="#albums-section">Album View</a></li>
