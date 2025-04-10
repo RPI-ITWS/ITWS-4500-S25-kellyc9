@@ -5,6 +5,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const addSongForm = document.getElementById('add-song-form');
     const updateSongForm = document.getElementById('update-song-form');
     const deleteButton = document.getElementById('delete-button');
+    const cancelEditButton = document.getElementById('cancel-edit');
+    
+    // Add smooth scrolling for navigation links
+    document.querySelectorAll('.nav-menu a').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetId = link.getAttribute('href');
+            document.querySelector(targetId).scrollIntoView({ 
+                behavior: 'smooth' 
+            });
+        });
+    });
+    
+    // Cancel edit button
+    cancelEditButton.addEventListener('click', () => {
+        document.getElementById('edit-delete-section').style.display = 'none';
+    });
     
     // Load songs with Spotify and Genius links
     async function loadSongsWithLinks() {
@@ -51,6 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         } catch (error) {
             console.error('Error loading songs:', error);
+            songsContainer.innerHTML = '<p>Error loading songs. Please try again later.</p>';
         }
     }
     
@@ -109,6 +127,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok) {
                 addSongForm.reset();
                 loadSongsWithLinks(); // Reload the songs list
+                // Scroll to see the new song in the list
+                document.getElementById('songs-section').scrollIntoView({ behavior: 'smooth' });
             } else {
                 const error = await response.json();
                 alert(`Failed to add song: ${error.message || 'Unknown error'}`);
@@ -165,6 +185,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok) {
                 document.getElementById('edit-delete-section').style.display = 'none';
                 loadSongsWithLinks(); // Reload the songs list
+                // Scroll back to the songs list
+                document.getElementById('songs-section').scrollIntoView({ behavior: 'smooth' });
             } else {
                 const error = await response.json();
                 alert(`Failed to update song: ${error.message || 'Unknown error'}`);
@@ -189,6 +211,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok) {
                 document.getElementById('edit-delete-section').style.display = 'none';
                 loadSongsWithLinks(); // Reload the songs list
+                // Scroll back to the songs list
+                document.getElementById('songs-section').scrollIntoView({ behavior: 'smooth' });
             } else {
                 alert('Failed to delete song');
             }

@@ -8,10 +8,20 @@
 <body>
     <h1>Kendrick Lamar Songs</h1>
 
-    <h2>Songs</h2>
-    <ul id="songs-container"></ul>
+    <div class="nav-menu">
+        <ul>
+            <li><a href="#songs-section">All Songs</a></li>
+            <li><a href="#albums-section">Album View</a></li>
+            <li><a href="#add-song">Add New Song</a></li>
+        </ul>
+    </div>
 
-    <div>
+    <div id="songs-section" class="section">
+        <h2>All Songs</h2>
+        <ul id="songs-container"></ul>
+    </div>
+
+    <div id="albums-section" class="section">
         <h2>By Album</h2>
         <select id="album-select">
             <option value="">Select album...</option>
@@ -19,7 +29,7 @@
         <ul id="album-songs"></ul>
     </div>
 
-    <div id="add-song">
+    <div id="add-song" class="section">
         <h2>Add a New Song</h2>
         <form id="add-song-form">
             <label for="title">Title:</label>
@@ -34,7 +44,7 @@
         </form>
     </div>
 
-    <div id="edit-delete-section" style="display: none;">
+    <div id="edit-delete-section" class="section" style="display: none;">
         <h2>Edit or Delete Song</h2>
         <form id="update-song-form">
             <input type="hidden" id="edit-id">
@@ -48,7 +58,8 @@
             <input type="number" id="edit-track_number" required>
             <button type="submit">Update Song</button>
         </form>
-        <button id="delete-button" style="background-color: red; color: white;">Delete Song</button>
+        <button id="delete-button">Delete Song</button>
+        <button id="cancel-edit">Cancel</button>
     </div>
 
     <script src="/node/script.js"></script>
