@@ -50,7 +50,7 @@ function App() {
 
   return (
     <div style={{ padding: 20 }}>
-      <h1>🧠 Quiz 2 - Quotes</h1>
+      <h1>Quiz 2 - Quotes</h1>
 
       <h2>➕ Run ETL</h2>
       <select onChange={(e) => setSource(e.target.value)}>
@@ -59,15 +59,15 @@ function App() {
       </select>
       <button onClick={runETL}>Run ETL</button>
 
-      <h2>🔍 Get Quote by ID</h2>
+      <h2>Get Quote by ID</h2>
       <input value={quoteId} onChange={(e) => setQuoteId(e.target.value)} />
       <button onClick={getQuoteById}>Search</button>
       {singleQuote && <pre>{JSON.stringify(singleQuote, null, 2)}</pre>}
 
-      <h2>🗑️ Danger Zone</h2>
+      <h2>Danger Zone</h2>
       <button onClick={deleteAll}>Delete All Quotes</button>
 
-      <h2>📋 All Quotes</h2>
+      <h2>All Quotes</h2>
       {quotes.map((q) => (
         <div key={q.id} style={{ border: '1px solid #ccc', marginBottom: 10, padding: 10 }}>
           <p><strong>{q.author}</strong></p>
